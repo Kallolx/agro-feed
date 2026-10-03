@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>পোস্টের বিস্তারিত | খামারি বাজার</title>
+<meta name="theme-color" content="#12291e">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/detail.css">
+</head>
+<body>
+<div id="nav"></div>
+<script src="js/icons.js"></script>
+<script src="js/app.js"></script>
+<script src="js/social.js"></script>
+<script>KB.mountNav('browse')</script>
+<main class="wrap dwrap" id="root"></main>
+<div class="lb" id="lb"><button class="lx" aria-label="বন্ধ করুন" id="lbx"></button><button class="lp" aria-label="আগের" id="lbp"></button><img alt="" id="lbi"><button class="ln" aria-label="পরের" id="lbn"></button></div>
+<div id="footer"></div>
+<script>
+(() => {
+  const { catOf, bn, money, esc, ago, ph, posts, users, me, ic, avatar, catPic } = KB;
+  const id = +new URLSearchParams(location.search).get('id');
+  const p = posts().find(x => x.id === id);
+  const root = document.getElementById('root');
+  const u = me();
+  if (!p || (p.status !== 'approved' && !(u && (u.role === 'admin' || u.id === p.sellerId)))) {
+    root.innerHTML = `<div class="empty card"><i>${ic('lucide:paw-print')}</i><h3>পোস্টটি পাওয়া যায়নি</h3><a class="btn btn-green" href="index.html" style="margin-top:12px">হোমে ফিরুন</a></div>`;
+    return;
+  }
+  const c = catOf(p.cat), seller = users().find(x => x.id === p.sellerId);
+  const imgs = p.images.length ? p.images : [ph(c.icon)];
+  document.title = p.title + ' | খামারি বাজার';
+  const next = encodeURIComponent('post.html?id=' + p.id);
+  const unit = p.ptype === 'kg' ? 'কেজি' : 'প্রতিটি';
+  const est = p.ptype === 'kg' ? p.price * p.total : p.price * p.count;
+  const lock = `<span class="lk">${ic('lucide:lock')} লগইন করুন</span>`;
+  const row = (icon, label, val, locked) => `<div><dt>${ic(icon)} ${label}</dt><dd ${locked ? 'class="lk"' : ''}>${val}</dd></div>`;
+
+  const status = p.status === 'approved' ? '' : `<div class="badge ${p.status === 'pending' ? 'wait' : 'no'}" style="margin-bottom:12px">${p.status === 'pending' ? ic('lucide:hourglass') + ' অ্যাডমিন রিভিউ চলছে' : ic('lucide:circle-x') + ' বাতিল'}</div>`;
+
+  const contact = u ? `
+    <div class="dcontact">
+      <div class="crow">${ic('lucide:phone')}<div><small>মোবাইল নম্বর</small><b>${bn(esc(p.phone))}</b></div></div>
+      <div class="crow">${ic('lucide:map-pin')}<div><small>পূর্ণ ঠিকানা</small><b>${esc(p.address)}, ${esc(p.district)}</b></div></div>
+      <div class="cbtns"><a class="btn btn-amber" href="tel:${esc(p.phone)}">${ic('lucide:phone')} কল করুন</a><a class="btn btn-wa" href="https://wa.me/88${esc(p.phone)}" target="_blank" rel="noopener">${ic('fa6-brands:whatsapp')} হোয়াটসঅ্যাপ</a></div>
+    </div>` : `
+    <div class="dlock"><div class="blur"><b>মোবাইল: 01●●●●●●●●●</b><br>ঠিকানা: ●●●●●●●●, ●●●●●●<br>হোয়াটসঅ্যাপ: ●●●●●●●●●●●</div>
+      <div class="gate">${ic('lucide:lock')}<b>যোগাযোগ নম্বর ও পূর্ণ ঠিকানা দেখতে লগইন করুন</b><div class="hint">বিনামূল্যে মাত্র 1 মিনিটে একাউন্ট খুলুন</div>
+        <a class="btn btn-amber" href="login.html?next=${next}">লগইন / রেজিস্ট্রেশন</a></div></div>`;
+
+  const sim = posts().filter(x => x.status === 'approved' && x.cat === p.cat && x.id !== p.id).slice(0, 3);
+
+  root.innerHTML = `
+  <nav class="bc" aria-label="নেভিগেশন">
+    <a href="index.html">${ic('lucide:house')}<span class="t-home">হোম</span></a>
+    <span class="bc-s">${ic('lucide:chevron-right')}</span>
+    <a href="index.html?cat=${esc(c.id)}#feed">${catPic(c)}<span>${esc(c.name)}</span></a>
+    <span class="bc-s">${ic('lucide:chevron-right')}</span>
+    <b class="bc-cur" title="${esc(p.title)}">${esc(p.title)}</b>
+  </nav>
+
+  <div class="dgrid">
+    <div class="dcol">
+      <div class="gview">
+        <div class="gmain" id="gmain"><img id="gbig" src="${imgs[0]}" alt="${esc(p.title)}">
+          ${imgs.length > 1 ? `<button class="gnav gprev" id="gp" aria-label="আগের">${ic('lucide:chevron-left')}</button><button class="gnav gnext" id="gn" aria-label="পরের">${ic('lucide:chevron-right')}</button>
+          <span class="gcount">${ic('lucide:images')} <span id="gc">1</span> / ${bn(imgs.length)}</span>` : ''}
+          <span class="gtag">${money(p.price)} <small>/ ${unit}</small></span></div>
+        ${imgs.length > 1 ? `<div class="gthumbs" id="gth">${imgs.map((s, i) => `<button class="${i ? '' : 'on'}" data-i="${i}" aria-label="ছবি ${bn(i + 1)}"><img src="${s}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}
+      </div>
+      <div class="dcard"><h3>${ic('lucide:newspaper')} বিবরণ</h3><p class="desc">${esc(p.desc)}</p></div>
+      ${p.status === 'approved' ? `<div class="dcard soc-card">${Social.block(p)}</div>` : ''}
+    </div>
+
+    <div class="dcol right">
+      <div class="dcard dinfo">
+        ${status}
+        <div class="dtop"><span class="dpill">${ic(c.icon)} ${esc(c.name)}</span>
+          <div class="dacts pc-more" data-id="${p.id}"><button data-soc="save">${ic('lucide:bookmark')}<span><em>${Social.isSaved(p.id) ? 'সংরক্ষিত' : 'সংরক্ষণ'}</em></span></button><button data-soc="share">${ic('lucide:share-2')}<span>শেয়ার</span></button></div></div>
+        <h1 class="d-title">${esc(p.title)}</h1>
+        <div class="dmeta"><span>${ic('lucide:clock')} ${ago(p.createdAt)}</span><span>${ic('lucide:map-pin')} ${esc(p.district)}</span></div>
+        <div class="dprice"><b>${money(p.price)}</b><small>/ ${unit}</small></div>
+        <div class="dtotal">আনুমানিক মোট মূল্য <b>${money(est)}</b></div>
+        <dl class="facts">
+          ${row('lucide:tags', 'জাত', esc(p.breed))}
+          ${row('lucide:layers', 'পরিমাণ', bn(p.count) + 'টি')}
+          ${row('lucide:scale', 'গড় ওজন', u ? bn(p.avg) + ' কেজি' : lock, !u)}
+          ${row('lucide:scale', 'মোট ওজন', u ? bn(p.total) + ' কেজি' : lock, !u)}
+          ${row('lucide:clock', 'বয়স', u ? esc(p.age || '-') : lock, !u)}
+          ${row('lucide:map-pin', 'জেলা', esc(p.district))}
+        </dl>
+      </div>
+
+      <div class="dcard" style="padding:0">
+        <div class="dseller">${avatar(seller)}<div><b>${esc(seller?.name || 'খামারি')} ${ic('lucide:badge-check', 'vf')}</b><small>যাচাইকৃত বিক্রেতা</small></div></div>
+        ${contact}
+      </div>
+
+      <div class="dcard dtips"><h3>${ic('lucide:triangle-alert')} সতর্কতা</h3><p>পশু নিজে দেখে দাম ঠিক করুন। কোনো অগ্রিম টাকা পাঠাবেন না এবং হাটের দিনে যাচাই করে নিন।</p></div>
+    </div>
+  </div>
+
+  ${sim.length ? `<section class="dsim"><h2>${ic('lucide:layers')} এই ক্যাটাগরির আরও পোস্ট</h2><div class="simgrid">${sim.map(x => `
+    <a class="sim" href="post.html?id=${x.id}"><img src="${x.images[0] || ph(c.icon)}" alt="" loading="lazy"><div><h4>${esc(x.title)}</h4><p><b>${money(x.price)}</b><span>${ic('lucide:map-pin')} ${esc(x.district)}</span></p></div></a>`).join('')}</div></section>` : ''}`;
+
+  // ---------- gallery ----------
+  let cur = 0;
+  const big = document.getElementById('gbig');
+  const show = i => {
+    cur = (i + imgs.length) % imgs.length; big.src = imgs[cur];
+    const g = document.getElementById('gc'); if (g) g.textContent = bn(cur + 1);
+    document.querySelectorAll('#gth button').forEach((b, k) => b.classList.toggle('on', k === cur));
+    const b = document.querySelector('#gth .on'); if (b) b.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  };
+  if (imgs.length > 1) {
+    document.getElementById('gp').onclick = e => { e.stopPropagation(); show(cur - 1); };
+    document.getElementById('gn').onclick = e => { e.stopPropagation(); show(cur + 1); };
+    document.getElementById('gth').onclick = e => { const b = e.target.closest('[data-i]'); if (b) show(+b.dataset.i); };
+  }
+  // lightbox
+  const lb = document.getElementById('lb'), lbi = document.getElementById('lbi');
+  document.getElementById('lbx').innerHTML = ic('lucide:x'); document.getElementById('lbp').innerHTML = ic('lucide:chevron-left'); document.getElementById('lbn').innerHTML = ic('lucide:chevron-right');
+  const lbShow = i => { show(i); lbi.src = imgs[cur]; };
+  document.getElementById('gmain').onclick = () => { lbi.src = imgs[cur]; lb.classList.add('open'); };
+  document.getElementById('lbx').onclick = () => lb.classList.remove('open');
+  lb.onclick = e => { if (e.target === lb) lb.classList.remove('open'); };
+  document.getElementById('lbp').onclick = e => { e.stopPropagation(); lbShow(cur - 1); };
+  document.getElementById('lbn').onclick = e => { e.stopPropagation(); lbShow(cur + 1); };
+  if (imgs.length < 2) document.getElementById('lbp').style.display = document.getElementById('lbn').style.display = 'none';
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') (lb.classList.contains('open') ? lbShow : show)(cur - 1);
+    if (e.key === 'ArrowRight') (lb.classList.contains('open') ? lbShow : show)(cur + 1);
+    if (e.key === 'Escape') lb.classList.remove('open');
+  });
+})();
+</script>
+<script>KB.mountFooter()</script>
+</body>
+</html>

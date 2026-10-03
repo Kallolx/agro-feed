@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>খামারি বাজার | গ্রাম থেকে সরাসরি চাষির হাত থেকে আপনার বাজার</title>
+<meta name="description" content="গরু, ছাগল, ভেড়া, মুরগি, হাঁস, কবুতর ও মাছ - দাম দেখে সরাসরি খামারির সঙ্গে যোগাযোগ করুন।">
+<meta name="theme-color" content="#12291e">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav"></div>
+<script src="js/icons.js"></script>
+<script src="js/app.js"></script>
+<script>KB.mountNav('home')</script>
+
+<section class="hero">
+  <div class="hero-bg" aria-hidden="true"><div></div></div>
+  <div class="wrap hero-in">
+    <div>
+      <h1 class="hero-title"><img src="img/hero-title.webp" width="900" height="446" alt="গ্রাম থেকে সরাসরি, চাষির হাত থেকে আপনার বাজার" fetchpriority="high" decoding="async"></h1>
+      <p class="lead">গরু, ছাগল, ভেড়া, মুরগি, হাঁস, কবুতর ও মাছ - দাম দেখে সরাসরি খামারির সঙ্গে যোগাযোগ করুন।</p>
+      <form class="hero-search" id="heroSearch">
+        <label class="f">
+          <script>document.write(KB.I.search)</script>
+          <input type="search" id="hq" placeholder="কী খুঁজছেন?" aria-label="কী খুঁজছেন">
+        </label>
+        <div class="f sel">
+          <select id="hc" aria-label="ক্যাটাগরি"><option value="">সকল ক্যাটাগরি</option></select>
+        </div>
+        <button class="btn btn-amber" type="submit">খুঁজুন</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="cats-sw"><button class="cat-nav cat-prev" aria-label="আগের"><i data-ic="lucide:chevron-left"></i></button><button class="cat-nav cat-next" aria-label="পরের"><i data-ic="lucide:chevron-right"></i></button>
+    <div class="swiper" id="cats"><div class="swiper-wrapper" id="catsWrap"></div></div></div>
+  <div class="layout" id="feed">
+    <aside class="side left" id="fPanel">
+      <div class="card fp">
+        <div class="fp-head">
+          <h3><span class="fp-ic"><i data-ic="lucide:sliders-horizontal"></i></span>ফিল্টার <em id="fCount" class="hide">0</em></h3>
+          <button class="fp-clear hide" id="reset">সব মুছুন</button>
+          <button class="fp-x" id="fClose" aria-label="বন্ধ করুন"><i data-ic="lucide:x"></i></button>
+        </div>
+        <div class="fp-res"><b id="rCount">0</b><span>টি পশু পাওয়া গেছে</span></div>
+        <div class="fp-active" id="fActive"></div>
+
+        <div class="fp-sec"><h4>সাজান</h4>
+          <div class="segw" id="sortSeg"><button data-s="new" class="on">নতুন</button><button data-s="low">কম দাম</button><button data-s="high">বেশি দাম</button></div></div>
+
+        <div class="fp-sec"><h4>ক্যাটাগরি</h4><select id="fc" aria-label="ক্যাটাগরি"><option value="">সব ক্যাটাগরি</option></select></div>
+        <div class="fp-sec hide" id="fbw"><h4>জাত / প্রকার</h4><select id="fb" aria-label="জাত"><option value="">সব জাত</option></select></div>
+        <div class="fp-sec"><h4>জেলা</h4><select id="fd" aria-label="জেলা"><option value="">সব জেলা</option></select></div>
+
+        <div class="fp-sec"><h4>দামের সীমা</h4>
+          <div class="fp-price"><label><i>৳</i><input id="pmin" type="number" inputmode="numeric" min="0" placeholder="সর্বনিম্ন"></label><span>–</span><label><i>৳</i><input id="pmax" type="number" inputmode="numeric" min="0" placeholder="সর্বোচ্চ"></label></div>
+          <div class="qchips" id="qp"><button data-max="20000">20 হাজার</button><button data-max="50000">50 হাজার</button><button data-max="100000">1 লাখ</button><button data-max="200000">2 লাখ</button></div></div>
+
+        <div class="fp-foot"><button class="btn btn-amber btn-block fp-apply" id="fApply">ফলাফল দেখুন</button></div>
+      </div>
+    </aside>
+    <div class="fbg" id="fBg"></div>
+
+    <main>
+      <button class="mf-btn" id="fOpen"><span><i data-ic="lucide:sliders-horizontal" class="h-ic"></i> ফিল্টার <em id="fCount2" class="hide">0</em></span><b><i id="rCount2">0</i> টি পশু</b></button>
+      <div id="list"></div>
+      <div class="sentinel hide" id="more"><div class="spin" aria-hidden="true"></div><span>আরও পোস্ট লোড হচ্ছে...</span></div>
+      <div class="feed-end hide" id="feedEnd">সব পোস্ট দেখা হয়েছে</div>
+    </main>
+
+    <aside class="side right">
+      <div class="card cta-card"><h3>আপনার পশু বিক্রি করবেন?</h3><p>বিনামূল্যে পোস্ট করুন। অ্যাডমিন যাচাই করলেই হাজারো ক্রেতা দেখতে পাবেন।</p><a class="btn btn-amber btn-block" href="sell.html">পোস্ট করুন</a></div>
+      <div class="card"><h3>কীভাবে কাজ করে</h3>
+        <ul class="tips"><li>বিক্রেতা পোস্ট জমা দেন</li><li>অ্যাডমিন যাচাই ও অনুমোদন করেন</li><li>ক্রেতা লগইন করে যোগাযোগ নম্বর দেখেন</li></ul></div>
+      <div class="card fp-safe"><h3><i data-ic="lucide:shield-check" class="h-ic"></i> নিরাপদ কেনাকাটা</h3>
+        <ul class="tips"><li>পশু সরাসরি দেখে কিনুন</li><li>অগ্রিম টাকা পাঠাবেন না</li><li>হাটের দিনে যাচাই করে নিন</li></ul></div>
+    </aside>
+  </div>
+</div>
+<div class="modal sheet" id="allSheet"><div class="box">
+  <div class="sheet-h"><h3>সব ক্যাটাগরি</h3><button id="allX" aria-label="বন্ধ করুন"><i data-ic="lucide:x"></i></button></div>
+  <div class="all-grid" id="allGrid"></div></div></div>
+<div id="footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="js/social.js"></script>
+<script src="js/home.js"></script>
+<script>KB.mountFooter()</script>
+</body>
+</html>

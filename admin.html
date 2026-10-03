@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>অ্যাডমিন প্যানেল | খামারি বাজার</title>
+<meta name="theme-color" content="#12291e">
+<meta name="robots" content="noindex">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="adm">
+<div id="app"></div>
+<div class="modal" id="modal"><div class="box wide" id="mbox"></div></div>
+<script src="js/icons.js"></script>
+<script src="js/app.js"></script>
+<script>
+(() => {
+  const { CATS, catOf, ic, esc, bn, money, ago, ph, posts, savePosts, users, me, toast, avatar, catPic } = KB;
+  const $ = id => document.getElementById(id);
+  const app = $('app'), u = me();
+
+  // ---------- access gate ----------
+  if (!u) { KB.requireLogin(); return; }
+  if (u.role !== 'admin') {
+    app.innerHTML = `<div class="wrap" style="padding-top:60px"><div class="empty-a"><i>${ic('lucide:ban')}</i><h3>শুধু অ্যাডমিনের জন্য</h3><p>এই পেজ দেখার অনুমতি আপনার নেই।</p><a class="btn btn-green" href="index.html" style="margin-top:14px">হোমে ফিরুন</a></div></div>`;
+    return;
+  }
+
+  const saveUsers = l => KB.set('users', l);
+  const TITLES = { dash: 'ড্যাশবোর্ড', posts: 'পোস্ট রিভিউ', users: 'ইউজার ম্যানেজমেন্ট', cats: 'ক্যাটাগরি' };
+  let view = TITLES[location.hash.slice(1)] ? location.hash.slice(1) : 'dash';
+  const ps = { tab: 'pending', q: '', cat: '' };
+  const us = { q: '' };
+
+  // ---------- shell ----------
+  app.innerHTML = `
+  <div class="adm-shell">
+    <aside class="adm-side" id="aside">
+      <div class="adm-brand"><img src="logo.png" alt="খামারি বাজার"><small>অ্যাডমিন প্যানেল</small></div>
+      <nav class="adm-nav" id="anav"></nav>
+      <div class="adm-foot">
+        <div class="adm-me">${avatar(u)}<div><b>${esc(u.name)}</b><small>অ্যাডমিন</small></div></div>
+        <a href="index.html">${ic('lucide:external-link')} সাইট দেখুন</a>
+        <button id="alo">${ic('lucide:log-out')} লগআউট</button>
+      </div>
+    </aside>
+    <div class="adm-bg" id="abg"></div>
+    <div class="adm-main">
+      <header class="adm-top"><button class="adm-menu" id="amenu" aria-label="মেনু">${ic('lucide:menu')}</button><h1 id="atitle"></h1></header>
+      <div class="adm-body" id="view"></div>
+    </div>
+  </div>`;
+  const side = on => { $('aside').classList.toggle('open', on); $('abg').classList.toggle('open', on); };
+  $('amenu').onclick = () => side(true); $('abg').onclick = () => side(false);
+  $('alo').onclick = KB.logout;
+
+  function renderNav() {
+    const pend = posts().filter(p => p.status === 'pending').length;
+    const items = [['dash', 'lucide:layout-dashboard'], ['posts', 'lucide:newspaper'], ['users', 'lucide:users'], ['cats', 'lucide:tags']];
+    $('anav').innerHTML = '<h6>মেনু</h6>' + items.map(([k, i]) =>
+      `<button data-v="${k}" class="${k === view ? 'on' : ''}">${ic(i)} ${TITLES[k]}${k === 'posts' && pend ? `<span class="cnt">${bn(pend)}</span>` : ''}</button>`).join('');
+  }
+  $('anav').onclick = e => { const b = e.target.closest('[data-v]'); if (b) go(b.dataset.v); };
+  function go(v) { view = v; location.hash = v; side(false); scrollTo(0, 0); render(); }
+
+  function render() {
+    renderNav(); $('atitle').textContent = TITLES[view];
+    ({ dash: renderDash, posts: renderPosts, users: renderUsers, cats: renderCats })[view]();
+    KB.enhanceSelects($('view'));
+  }
+
+  // ---------- shared ----------
+  const seller = p => users().find(x => x.id === p.sellerId);
+  const stBadge = s => s === 'approved' ? `<span class="badge ok">${ic('lucide:circle-check')} প্রকাশিত</span>` : s === 'pending' ? `<span class="badge wait">${ic('lucide:hourglass')} পেন্ডিং</span>` : `<span class="badge no">${ic('lucide:circle-x')} বাতিল</span>`;
+  const setStatus = (id, status, reason = '') => savePosts(posts().map(p => p.id === id ? { ...p, status, reason } : p));
+
+  // ---------- modal ----------
+  const mbox = $('mbox');
+  const openModal = html => { mbox.innerHTML = html; $('modal').classList.add('open'); KB.enhanceSelects(mbox); };
+  const closeModal = () => $('modal').classList.remove('open');
+  $('modal').onclick = e => { if (e.target === $('modal') || e.target.closest('[data-close]')) closeModal(); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ---------- dashboard ----------
+  function renderDash() {
+    const all = posts(), us_ = users();
+    const n = s => all.filter(p => p.status === s).length;
+    const pend = all.filter(p => p.status === 'pending').sort((a, b) => b.createdAt - a.createdAt);
+    const byCat = CATS.map(c => ({ c, n: all.filter(p => p.cat === c.id).length })).sort((a, b) => b.n - a.n).slice(0, 8);
+    const mx = Math.max(1, ...byCat.map(x => x.n)), tot = Math.max(1, all.length);
+    const kp = (i, v, l, hl = '') => `<div class="ak ${hl}"><i>${ic(i)}</i><div><b>${bn(v)}</b><span>${l}</span></div></div>`;
+    $('view').innerHTML = `
+      <div class="akpis">
+        ${kp('lucide:hourglass', n('pending'), 'রিভিউর অপেক্ষায়', 'hl')}
+        ${kp('lucide:circle-check', n('approved'), 'প্রকাশিত পোস্ট')}
+        ${kp('lucide:newspaper', all.length, 'মোট পোস্ট')}
+        ${kp('lucide:users', us_.length, 'মোট ইউজার')}
+        ${kp('lucide:tags', CATS.length, 'ক্যাটাগরি')}
+        ${kp('lucide:circle-x', n('rejected'), 'বাতিল পোস্ট')}
+      </div>
+      <div class="agrid">
+        <div class="panel"><h3>${ic('lucide:trending-up')} ক্যাটাগরি অনুযায়ী পোস্ট</h3>
+          ${byCat.map(x => `<div class="bar"><span>${ic(x.c.icon)} ${esc(x.c.name)}</span><div class="tr"><div class="fl" style="width:${x.n / mx * 100}%"></div></div><b>${bn(x.n)}</b></div>`).join('')}
+        </div>
+        <div class="panel"><h3>${ic('lucide:list-checks')} পোস্টের অবস্থা</h3>
+          <div class="sbar"><i class="c-ok" style="width:${n('approved') / tot * 100}%"></i><i class="c-wait" style="width:${n('pending') / tot * 100}%"></i><i class="c-no" style="width:${n('rejected') / tot * 100}%"></i></div>
+          <div class="leg"><div><i class="c-ok"></i>প্রকাশিত<b>${bn(n('approved'))}</b></div><div><i class="c-wait"></i>পেন্ডিং<b>${bn(n('pending'))}</b></div><div><i class="c-no"></i>বাতিল<b>${bn(n('rejected'))}</b></div></div>
+        </div>
+      </div>
+      <div class="agrid">
+        <div class="panel"><div class="panel-h"><h3>${ic('lucide:clock')} পেন্ডিং রিভিউ</h3><button class="btn btn-line btn-sm" data-v="posts">সব দেখুন</button></div>
+          ${pend.length ? pend.slice(0, 5).map(p => `<div class="urow" style="grid-template-columns:minmax(0,1fr) auto;padding-left:0;padding-right:0">
+            <div class="uwho"><div style="min-width:0"><b>${esc(p.title)}</b><small>${ic(catOf(p.cat).icon)} ${esc(p.breed)} · ${esc(p.district)} · ${ago(p.createdAt)}</small></div></div>
+            <div class="acts-row"><button class="ib ok" data-a="ok" data-id="${p.id}" aria-label="অনুমোদন">${ic('lucide:check')}</button><button class="ib" data-a="no" data-id="${p.id}" aria-label="বাতিল">${ic('lucide:x')}</button></div></div>`).join('')
+            : `<div class="empty-a" style="box-shadow:none;padding:24px"><i>${ic('lucide:circle-check')}</i>কোনো পেন্ডিং পোস্ট নেই</div>`}
+        </div>
+        <div class="panel"><div class="panel-h"><h3>${ic('lucide:user-plus')} সর্বশেষ ইউজার</h3><button class="btn btn-line btn-sm" data-v="users">সব দেখুন</button></div>
+          ${us_.slice(-5).reverse().map(x => `<div class="urow" style="grid-template-columns:minmax(0,1fr);padding-left:0;padding-right:0"><div class="uwho">${avatar(x)}<div><b>${esc(x.name)}</b><small>${bn(x.phone)}</small></div></div></div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // ---------- posts ----------
+  function renderPosts() {
+    const all = posts(), n = s => s === 'all' ? all.length : all.filter(p => p.status === s).length;
+    const tabs = [['pending', 'পেন্ডিং'], ['approved', 'প্রকাশিত'], ['rejected', 'বাতিল'], ['all', 'সব']];
+    $('view').innerHTML = `
+      <div class="tbar"><div class="ptabs" id="ptabs">${tabs.map(([k, t]) => `<button data-t="${k}" class="${k === ps.tab ? 'on' : ''}">${t}<em>${bn(n(k))}</em></button>`).join('')}</div></div>
+      <div class="tbar">
+        <div class="sbox">${ic('lucide:search')}<input id="pq" type="search" placeholder="পোস্ট, জাত বা এলাকা খুঁজুন" value="${esc(ps.q)}"></div>
+        <select id="pc" aria-label="ক্যাটাগরি"><option value="" data-img="img/category/web/all.webp">সব ক্যাটাগরি</option>${CATS.map(c => `<option value="${c.id}"${c.img ? ` data-img="${esc(c.img)}"` : ''}>${esc(c.name)}</option>`).join('')}</select>
+      </div>
+      <div id="plist"></div>`;
+    $('pc').value = ps.cat;
+    $('ptabs').onclick = e => { const b = e.target.closest('[data-t]'); if (b) { ps.tab = b.dataset.t; render(); } };
+    $('pq').oninput = e => { ps.q = e.target.value.trim(); drawPosts(); };
+    $('pc').onchange = e => { ps.cat = e.target.value; drawPosts(); };
+    drawPosts();
+  }
+  function drawPosts() {
+    const list = posts().filter(p => (ps.tab === 'all' || p.status === ps.tab) && (!ps.cat || p.cat === ps.cat) &&
+      (!ps.q || [p.title, p.breed, p.district, p.address, seller(p)?.name].join(' ').includes(ps.q))).sort((a, b) => b.createdAt - a.createdAt);
+    $('plist').innerHTML = list.length ? list.map(p => {
+      const s = seller(p), c = catOf(p.cat);
+      return `<div class="prow"><img src="${p.images[0] || ph(c.icon)}" alt="" loading="lazy">
+        <div style="min-width:0">${stBadge(p.status)}<h4>${esc(p.title)}</h4>
+          <p><span>${ic(c.icon)} ${esc(c.name)} · ${esc(p.breed)}</span><span>${bn(p.count)}টি · মোট ${bn(p.total)} কেজি</span><span><b>${money(p.price)}</b></span></p>
+          <p><span>${ic('lucide:map-pin')} ${esc(p.district)}</span><span>${ic('lucide:user')} ${esc(s?.name || '-')} · ${bn(p.phone)}</span><span>${ago(p.createdAt)}</span></p>
+          ${p.reason ? `<p class="why">কারণ: ${esc(p.reason)}</p>` : ''}</div>
+        <div class="acts-row">
+          <a class="ib" href="post.html?id=${p.id}" target="_blank" rel="noopener" aria-label="দেখুন">${ic('lucide:eye')}</a>
+          ${p.status !== 'approved' ? `<button class="ib ok" data-a="ok" data-id="${p.id}" aria-label="অনুমোদন">${ic('lucide:check')}</button>` : ''}
+          ${p.status !== 'rejected' ? `<button class="ib" data-a="no" data-id="${p.id}" aria-label="বাতিল">${ic('lucide:x')}</button>` : ''}
+          <button class="ib" data-a="del" data-id="${p.id}" aria-label="মুছুন">${ic('lucide:trash')}</button></div></div>`;
+    }).join('') : `<div class="empty-a"><i>${ic('lucide:inbox')}</i>কোনো পোস্ট পাওয়া যায়নি</div>`;
+  }
+
+  // ---------- users ----------
+  function renderUsers() {
+    $('view').innerHTML = `
+      <div class="tbar"><div class="sbox">${ic('lucide:search')}<input id="uq" type="search" placeholder="নাম বা মোবাইল নম্বর খুঁজুন" value="${esc(us.q)}"></div>
+        <span class="grow"></span><button class="btn btn-amber" id="uadd">${ic('lucide:user-plus')} নতুন ইউজার</button></div>
+      <div class="ulist"><div class="urow hd"><span>ইউজার</span><span>ভূমিকা</span><span>পোস্ট</span><span>অবস্থা</span><span>অ্যাকশন</span></div><div id="ul"></div></div>`;
+    $('uq').oninput = e => { us.q = e.target.value.trim(); drawUsers(); };
+    $('uadd').onclick = () => userModal();
+    drawUsers();
+  }
+  function drawUsers() {
+    const all = posts();
+    const list = users().filter(x => !us.q || (x.name + ' ' + x.phone).includes(us.q));
+    $('ul').innerHTML = list.length ? list.map(x => {
+      const self = x.id === u.id, cnt = all.filter(p => p.sellerId === x.id).length;
+      const role = x.role === 'admin' ? '<span class="badge dark">অ্যাডমিন</span>' : '<span class="badge soft">ইউজার</span>';
+      const st = x.blocked ? '<span class="badge off">বন্ধ</span>' : '<span class="badge ok">সক্রিয়</span>';
+      return `<div class="urow"><div class="uwho">${avatar(x)}<div style="min-width:0"><b>${esc(x.name)}${self ? ' (আপনি)' : ''}</b><small>${bn(x.phone)}</small></div></div>
+        <span class="u-role">${role}</span><span class="u-posts">${bn(cnt)}টি</span><span class="u-st">${st}</span>
+        <div class="acts-row">
+          <button class="ib" data-u="role" data-id="${x.id}" ${self ? 'disabled' : ''} aria-label="ভূমিকা বদলান" title="${x.role === 'admin' ? 'অ্যাডমিন সরান' : 'অ্যাডমিন বানান'}">${ic('lucide:user-cog')}</button>
+          <button class="ib" data-u="block" data-id="${x.id}" ${self ? 'disabled' : ''} aria-label="বন্ধ বা চালু" title="${x.blocked ? 'চালু করুন' : 'বন্ধ করুন'}">${ic(x.blocked ? 'lucide:user-check' : 'lucide:user-x')}</button>
+          <button class="ib" data-u="del" data-id="${x.id}" ${self ? 'disabled' : ''} aria-label="মুছুন">${ic('lucide:trash')}</button></div>
+        <div class="u-meta acts-row">${role}${st}<span class="badge soft">${bn(cnt)}টি পোস্ট</span></div></div>`;
+    }).join('') : '<div class="empty-a" style="box-shadow:none">কোনো ইউজার পাওয়া যায়নি</div>';
+  }
+  function userModal() {
+    openModal(`<h3>নতুন ইউজার</h3>
+      <div class="field" id="ufn"><label>নাম</label><input id="un" placeholder="ইউজারের নাম লিখুন"><span class="err">নাম লিখুন</span></div>
+      <div class="field" id="ufp"><label>মোবাইল নম্বর</label><div class="lg-in"><span class="lg-cc"><svg class="flag-bd" viewBox="0 0 30 18" width="24" height="15" aria-hidden="true"><rect width="30" height="18" rx="2.5" fill="#006a4e"/><circle cx="13.5" cy="9" r="5.4" fill="#f42a41"/></svg><b>+88</b></span><input id="up" inputmode="numeric" maxlength="11" placeholder="মোবাইল নম্বর লিখুন"></div><span class="err">সঠিক 11 ডিজিটের নম্বর দিন</span></div>
+      <div class="field" id="ufw"><label>পাসওয়ার্ড</label><input id="uw" type="text" placeholder="পাসওয়ার্ড লিখুন"><span class="err">কমপক্ষে 6 অক্ষর দিন</span></div>
+      <div class="field"><label>ভূমিকা</label><select id="ur" aria-label="ভূমিকা"><option value="user">ইউজার</option><option value="admin">অ্যাডমিন</option></select></div>
+      <div class="mact"><button class="btn btn-line" data-close>বাতিল</button><button class="btn btn-green" id="usave">যোগ করুন</button></div>`);
+    $('usave').onclick = () => {
+      ['ufn', 'ufp', 'ufw'].forEach(i => $(i).classList.remove('bad'));
+      const name = $('un').value.trim(), phone = $('up').value.trim(), pass = $('uw').value; let ok = true;
+      if (name.length < 2) { $('ufn').classList.add('bad'); ok = false; }
+      if (!/^01[3-9]\d{8}$/.test(phone)) { $('ufp').classList.add('bad'); ok = false; }
+      else if (users().some(x => x.phone === phone)) { $('ufp').classList.add('bad'); $('ufp').querySelector('.err').textContent = 'এই নম্বরে আগেই একাউন্ট আছে'; ok = false; }
+      if (pass.length < 6) { $('ufw').classList.add('bad'); ok = false; }
+      if (!ok) return;
+      saveUsers([...users(), { id: Date.now(), name, phone, pass, role: $('ur').value }]);
+      closeModal(); toast('ইউজার যোগ হয়েছে'); render();
+    };
+  }
+
+  // ---------- categories ----------
+  const ICONS_PICK = ['game-icons:chicken','game-icons:cow','game-icons:goat','game-icons:sheep','game-icons:buffalo-head','game-icons:duck','game-icons:goose','game-icons:swan','game-icons:dove','game-icons:rooster','fa6-solid:kiwi-bird','game-icons:ostrich','fa6-solid:fish','game-icons:shrimp','game-icons:rabbit','fa6-solid:horse','game-icons:camel','game-icons:deer','game-icons:pig','game-icons:bee','game-icons:turtle','lucide:wheat','lucide:paw-print'];
+  function renderCats() {
+    const all = posts();
+    $('view').innerHTML = `<div class="tbar"><span class="hint">ক্রম অনুযায়ী প্রথম 10টি হোম পেজের স্লাইডারে দেখা যায়।</span></div>
+      <div class="ccards">${CATS.map((c, i) => {
+        const cnt = all.filter(p => p.cat === c.id).length, br = c.breeds || [];
+        return `<div class="ccard"><div class="ccard-h"><span class="cic">${catPic(c)}</span><div><b>${esc(c.name)}</b><small>${bn(cnt)}টি পোস্ট · ${bn(br.length)}টি জাত</small></div></div>
+          <div class="chips2">${br.slice(0, 6).map(b => `<span>${esc(b)}</span>`).join('')}${br.length > 6 ? `<span>+${bn(br.length - 6)}</span>` : ''}</div>
+          <div class="acts-row"><button class="ib" data-c="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="উপরে">${ic('lucide:arrow-up')}</button>
+            <button class="ib" data-c="down" data-i="${i}" ${i === CATS.length - 1 ? 'disabled' : ''} aria-label="নিচে">${ic('lucide:arrow-down')}</button>
+            <button class="ib" data-c="edit" data-i="${i}" aria-label="এডিট">${ic('lucide:pencil')}</button>
+            <button class="ib" data-c="del" data-i="${i}" aria-label="মুছুন">${ic('lucide:trash')}</button></div></div>`;
+      }).join('')}
+        <div class="ccard cadd" data-c="add">${ic('lucide:plus')}<span>নতুন ক্যাটাগরি</span></div></div>`;
+  }
+  function catModal(idx) {
+    const c = idx == null ? { name: '', icon: ICONS_PICK[0], breeds: [] } : CATS[idx];
+    let icon = c.icon, img = c.img || '';
+    openModal(`<h3>${idx == null ? 'নতুন ক্যাটাগরি' : 'ক্যাটাগরি এডিট'}</h3>
+      <div class="field" id="cfn"><label>নাম</label><input id="cn" placeholder="ক্যাটাগরির নাম লিখুন" value="${esc(c.name)}"><span class="err">নাম লিখুন</span></div>
+      <div class="field"><label>আইকন</label><div class="icopick" id="icp">${ICONS_PICK.map(k => `<button type="button" data-k="${k}" class="${k === icon ? 'on' : ''}">${ic(k)}</button>`).join('')}</div></div>
+      <div class="field"><label>ক্যাটাগরির ছবি</label><div class="cimg"><span class="cic" id="cimgp">${img ? `<img class="cpic" src="${esc(img)}" alt="">` : ic(icon)}</span>
+        <label class="btn btn-line btn-sm" for="cimg">${ic('lucide:images')} ছবি বাছাই করুন</label><input type="file" id="cimg" accept="image/*" class="hide"></div><span class="hint">ছবি না দিলে উপরের আইকন ব্যবহার হবে।</span></div>
+      <div class="field"><label>জাত / প্রকার</label><textarea id="cb" style="min-height:130px" placeholder="প্রতি লাইনে একটি জাতের নাম লিখুন">${esc((c.breeds || []).join('\n'))}</textarea><span class="hint">প্রতি লাইনে বা কমা দিয়ে আলাদা করে লিখুন।</span></div>
+      <div class="mact"><button class="btn btn-line" data-close>বাতিল</button><button class="btn btn-green" id="csave">সেভ করুন</button></div>`);
+    $('icp').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; icon = b.dataset.k; $('icp').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+    $('cimg').onchange = async e => { const f = e.target.files[0]; if (!f) return; img = await KB.shrink(f); $('cimgp').innerHTML = `<img class="cpic" src="${img}" alt="">`; };
+    $('csave').onclick = () => {
+      const name = $('cn').value.trim();
+      $('cfn').classList.remove('bad'); if (!name) { $('cfn').classList.add('bad'); return; }
+      const breeds = [...new Set($('cb').value.split(/[\n,]/).map(x => x.trim()).filter(Boolean))];
+      const list = CATS.map(x => ({ ...x }));
+      if (idx == null) list.push({ id: 'c' + Date.now().toString(36), name, icon, breeds, img });
+      else {
+        const old = list[idx], same = JSON.stringify(old.breeds) === JSON.stringify(breeds);
+        list[idx] = { ...old, name, icon, breeds, img };
+        if (!same) delete list[idx].groups;
+      }
+      KB.saveCats(list); closeModal(); toast('ক্যাটাগরি সেভ হয়েছে'); render();
+    };
+  }
+
+  // ---------- actions (event delegation) ----------
+  document.addEventListener('click', e => {
+    const v = e.target.closest('[data-v]'); if (v && !v.closest('#anav')) { go(v.dataset.v); return; }
+    const a = e.target.closest('[data-a]');
+    if (a) {
+      const id = +a.dataset.id, act = a.dataset.a;
+      if (act === 'ok') { setStatus(id, 'approved'); toast('পোস্ট অনুমোদিত হয়েছে'); render(); }
+      else if (act === 'del') { if (confirm('পোস্টটি স্থায়ীভাবে মুছবেন?')) { savePosts(posts().filter(p => p.id !== id)); toast('পোস্ট মুছে ফেলা হয়েছে'); render(); } }
+      else if (act === 'no') {
+        openModal(`<h3>বাতিলের কারণ</h3><div class="field"><textarea id="rs" style="min-height:96px" placeholder="যেমন: ছবি অস্পষ্ট, তথ্য অসম্পূর্ণ"></textarea></div>
+          <div class="mact"><button class="btn btn-line" data-close>ফিরে যান</button><button class="btn btn-green" id="rok">বাতিল করুন</button></div>`);
+        $('rok').onclick = () => { setStatus(id, 'rejected', $('rs').value.trim()); closeModal(); toast('পোস্ট বাতিল করা হয়েছে'); render(); };
+      }
+      return;
+    }
+    const x = e.target.closest('[data-u]');
+    if (x) {
+      const id = +x.dataset.id, t = x.dataset.u, list = users();
+      if (t === 'role') { saveUsers(list.map(y => y.id === id ? { ...y, role: y.role === 'admin' ? 'user' : 'admin' } : y)); toast('ভূমিকা বদলানো হয়েছে'); }
+      else if (t === 'block') { saveUsers(list.map(y => y.id === id ? { ...y, blocked: !y.blocked } : y)); toast('ইউজারের অবস্থা বদলানো হয়েছে'); }
+      else if (t === 'del') {
+        if (!confirm('ইউজার ও তার সব পোস্ট স্থায়ীভাবে মুছে যাবে। চালিয়ে যাবেন?')) return;
+        saveUsers(list.filter(y => y.id !== id)); savePosts(posts().filter(p => p.sellerId !== id)); toast('ইউজার মুছে ফেলা হয়েছে');
+      }
+      render(); return;
+    }
+    const c = e.target.closest('[data-c]');
+    if (c) {
+      const t = c.dataset.c, i = +c.dataset.i;
+      if (t === 'add') return catModal();
+      if (t === 'edit') return catModal(i);
+      const list = CATS.map(y => ({ ...y }));
+      if (t === 'up' || t === 'down') { const j = t === 'up' ? i - 1 : i + 1; [list[i], list[j]] = [list[j], list[i]]; KB.saveCats(list); render(); }
+      else if (t === 'del') {
+        const used = posts().filter(p => p.cat === list[i].id).length;
+        if (used) return toast(`এই ক্যাটাগরিতে ${bn(used)}টি পোস্ট আছে, আগে সেগুলো সরান`);
+        if (list.length <= 1) return toast('অন্তত একটি ক্যাটাগরি থাকতে হবে');
+        if (confirm(`"${list[i].name}" ক্যাটাগরি মুছবেন?`)) { list.splice(i, 1); KB.saveCats(list); toast('ক্যাটাগরি মুছে ফেলা হয়েছে'); render(); }
+      }
+    }
+  });
+
+  KB.hydrate();
+  render();
+})();
+</script>
+</body>
+</html>

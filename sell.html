@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>বিক্রি করুন | খামারি বাজার</title>
+<meta name="theme-color" content="#12291e">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav"></div>
+<script src="js/icons.js"></script>
+<script src="js/app.js"></script>
+<script>KB.mountNav('sell')</script>
+<div class="wrap form-wrap">
+  <div class="page-h"><h1>পশু বিক্রির পোস্ট দিন</h1><p>সঠিক তথ্য দিন। অ্যাডমিন যাচাই করার পর পোস্ট সবার জন্য প্রকাশ হবে।</p></div>
+  <form id="f" novalidate>
+    <div class="card sec"><h3><span>1</span>কোন পশু?</h3>
+      <div class="pick" id="pick"></div>
+      <div class="g2" style="margin-top:12px">
+        <div class="field" id="g-breed"><label>জাত <em>*</em></label><input id="breed" list="breeds" placeholder="যেমন: ব্ল্যাক বেঙ্গল"><datalist id="breeds"></datalist><div class="bchips" id="breedChips"></div><span class="err">জাত লিখুন</span></div>
+        <div class="field" id="g-title"><label>পোস্টের শিরোনাম <em>*</em></label><input id="title" maxlength="90" placeholder="যেমন: কুরবানির জন্য 3টি দেশি গরু"><span class="hint">শিরোনামে সংখ্যা বা পরিমাণ লিখবেন না - নিচে আলাদা ঘরে দিন।</span><span class="err">শিরোনাম লিখুন (কমপক্ষে 10 অক্ষর, সংখ্যা/পরিমাণ ছাড়া)</span></div>
+      </div></div>
+
+    <div class="card sec"><h3><span>2</span>ছবি</h3>
+      <label class="upl" for="imgs"><i data-ic="lucide:camera"></i><b>ছবি যোগ করুন</b><div class="hint">সর্বোচ্চ 5টি। পরিষ্কার ও সামনে-পাশের ছবি দিলে বিক্রি দ্রুত হয়।</div></label>
+      <input type="file" id="imgs" accept="image/*" multiple class="hide"><div class="prev" id="prev"></div></div>
+
+    <div class="card sec"><h3><span>3</span>ওজন ও সংখ্যা</h3>
+      <div class="g3">
+        <div class="field" id="g-count"><label>পরিমাণ (মোট সংখ্যা) <em>*</em></label><input id="count" type="number" inputmode="numeric" min="1" placeholder="যেমন: 3"><span class="err">সংখ্যা দিন</span></div>
+        <div class="field" id="g-avg"><label>গড় ওজন (কেজি) <em>*</em></label><input id="avg" type="number" inputmode="decimal" min="0" step="0.1" placeholder="যেমন: 250"><span class="err">গড় ওজন দিন</span></div>
+        <div class="field"><label>বয়স</label><input id="age" placeholder="যেমন: 2 বছর"></div>
+      </div>
+      <div class="calc"><span>মোট ওজন (স্বয়ংক্রিয়)</span><b id="tot">0 কেজি</b></div></div>
+
+    <div class="card sec"><h3><span>4</span>দাম</h3>
+      <div class="seg" id="ptype" style="margin-bottom:12px"><button type="button" class="on" data-v="piece">প্রতিটির দাম</button><button type="button" data-v="kg">কেজি প্রতি দাম</button></div>
+      <div class="field" id="g-price"><label>দাম (৳) <em>*</em></label><input id="price" type="number" inputmode="numeric" min="1" placeholder="যেমন: 120000"><span class="err">দাম দিন</span></div></div>
+
+    <div class="card sec"><h3><span>5</span>ঠিকানা ও যোগাযোগ</h3>
+      <div class="g2">
+        <div class="field" id="g-dist"><label>জেলা <em>*</em></label><select id="dist"><option value="">জেলা বাছাই করুন</option></select><span class="err">জেলা বাছাই করুন</span></div>
+        <div class="field" id="g-addr"><label>উপজেলা / গ্রাম / এলাকা <em>*</em></label><input id="addr" placeholder="যেমন: শাহজাদপুর, বাজার রোড"><span class="err">ঠিকানা লিখুন</span></div>
+      </div>
+      <div class="field" id="g-phone"><label>মোবাইল নম্বর <em>*</em></label><div class="lg-in"><span class="lg-cc"><svg class="flag-bd" viewBox="0 0 30 18" width="24" height="15" aria-hidden="true"><rect width="30" height="18" rx="2.5" fill="#006a4e"/><circle cx="13.5" cy="9" r="5.4" fill="#f42a41"/></svg><b>+88</b></span><input id="phone" inputmode="numeric" maxlength="11" placeholder="01XXXXXXXXX"></div><span class="hint">শুধু লগইন করা ক্রেতারা এই নম্বর দেখতে পাবেন।</span><span class="err">সঠিক 11 ডিজিটের নম্বর দিন</span></div>
+      <div class="field" id="g-desc"><label>বিবরণ <em>*</em></label><textarea id="desc" placeholder="পশুর স্বাস্থ্য, খাবার, টিকা, বিশেষত্ব ইত্যাদি লিখুন…"></textarea><span class="err">বিবরণ লিখুন (কমপক্ষে 20 অক্ষর)</span></div></div>
+
+    <button class="btn btn-amber btn-block" style="padding:14px;font-size:17px">অ্যাডমিন রিভিউয়ের জন্য পাঠান</button>
+  </form>
+  <div class="card success hide" id="ok"><i data-ic="lucide:party-popper"></i><h2>পোস্ট জমা হয়েছে!</h2><p class="hint">অ্যাডমিন যাচাই করার পর আপনার পোস্ট সাইটে প্রকাশ হবে।</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap"><a class="btn btn-green" href="my.html">আমার পোস্ট দেখুন</a><a class="btn btn-line" href="sell.html">আরেকটি পোস্ট</a></div></div>
+</div>
+<div id="footer"></div>
+<script>
+(() => {
+  if (!KB.requireLogin()) return;
+  const { CATS, DISTRICTS, bn } = KB, $ = id => document.getElementById(id), u = KB.me();
+  let cat = 'cow', ptype = 'piece', imgs = [];
+  $('phone').value = u.phone;
+  DISTRICTS.forEach(d => $('dist').insertAdjacentHTML('beforeend', `<option>${d}</option>`));
+  $('pick').innerHTML = CATS.map(c => `<button type="button" data-c="${c.id}"><i>${KB.catPic(c)}</i>${c.name}</button>`).join('');
+  const setCat = c => {
+    cat = c;
+    $('pick').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.c === c));
+    const cc = KB.catOf(c);
+    $('breeds').innerHTML = cc.breeds.map(b => `<option value="${b}">`).join('');
+    $('breed').value = ''; $('breedChips').innerHTML = (cc.groups || [{ t: 'জাত', b: cc.breeds }]).map(g => `<div class="bg"><small>${g.t}</small>${g.b.map(b => `<button type="button" class="bchip">${b}</button>`).join('')}</div>`).join('');
+  };
+  const markChip = () => document.querySelectorAll('.bchip').forEach(x => x.classList.toggle('on', x.textContent === $('breed').value.trim()));
+  $('breedChips').onclick = e => { const b = e.target.closest('.bchip'); if (b) { $('breed').value = b.textContent; $('g-breed').classList.remove('bad'); markChip(); } };
+  $('breed').addEventListener('input', markChip);
+  $('pick').onclick = e => { const b = e.target.closest('button'); if (b) setCat(b.dataset.c); };
+  setCat('cow');
+  $('ptype').onclick = e => { const b = e.target.closest('button'); if (!b) return; ptype = b.dataset.v; $('ptype').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+  const calc = () => { $('tot').textContent = bn(+(($('count').value || 0) * ($('avg').value || 0)).toFixed(1)) + ' কেজি'; };
+  $('count').oninput = $('avg').oninput = calc;
+
+  const draw = () => {
+    $('prev').innerHTML = imgs.map((s, i) => `<div><img src="${s}" alt=""><button type="button" data-i="${i}" aria-label="মুছুন">×</button></div>`).join('');
+  };
+  $('imgs').onchange = async e => {
+    for (const f of [...e.target.files]) { if (imgs.length >= 5) { KB.toast('সর্বোচ্চ 5টি ছবি'); break; } imgs.push(await KB.shrink(f)); }
+    e.target.value = ''; draw();
+  };
+  $('prev').onclick = e => { const b = e.target.closest('button'); if (b) { imgs.splice(+b.dataset.i, 1); draw(); } };
+
+  $('f').onsubmit = e => {
+    e.preventDefault();
+    document.querySelectorAll('.field').forEach(x => x.classList.remove('bad'));
+    const v = { breed: $('breed').value.trim(), title: $('title').value.trim(), count: +$('count').value, avg: +$('avg').value, price: +$('price').value,
+      dist: $('dist').value, addr: $('addr').value.trim(), phone: $('phone').value.trim(), desc: $('desc').value.trim() };
+    const rules = { breed: v.breed, title: v.title.length >= 10 && !/[0-9০-৯]+\s*(টি|টা|পিস|জোড়া|হালি|ডজন)/.test(v.title), count: v.count >= 1, avg: v.avg > 0, price: v.price > 0, dist: v.dist, addr: v.addr, phone: /^01[3-9]\d{8}$/.test(v.phone), desc: v.desc.length >= 20 };
+    let first = null;
+    for (const k in rules) if (!rules[k]) { $('g-' + k).classList.add('bad'); first = first || $('g-' + k); }
+    if (first) { first.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    const list = KB.posts();
+    list.push({ id: Date.now(), sellerId: u.id, cat, breed: v.breed, title: v.title, count: v.count, avg: v.avg, total: +(v.count * v.avg).toFixed(1),
+      price: v.price, ptype, district: v.dist, address: v.addr, age: $('age').value.trim(), desc: v.desc, phone: v.phone, images: imgs, status: 'pending', createdAt: Date.now() });
+    KB.savePosts(list);
+    $('f').classList.add('hide'); $('ok').classList.remove('hide'); scrollTo({ top: 0, behavior: 'smooth' });
+  };
+})();
+</script>
+<script>KB.mountFooter()</script>
+</body>
+</html>

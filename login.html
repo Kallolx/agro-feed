@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>লগইন | খামারি বাজার</title>
+<meta name="theme-color" content="#12291e">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="nav"></div>
+<script src="js/icons.js"></script>
+<script src="js/app.js"></script>
+<script>KB.mountNav('my')</script>
+
+<main class="wrap lg-wrap">
+  <section class="lg-card">
+    <aside class="lg-side">
+      <div class="lg-over">
+        <img class="lg-logo" src="logo.png" alt="খামারি বাজার">
+        <h2>গ্রাম থেকে সরাসরি, <span>চাষির হাত থেকে</span></h2>
+        <ul class="lg-points">
+          <li><i data-ic="lucide:circle-check"></i>যাচাই করা বিক্রেতার পোস্ট</li>
+          <li><i data-ic="lucide:phone"></i>সরাসরি খামারির সঙ্গে যোগাযোগ</li>
+          <li><i data-ic="lucide:shield-check"></i>বিনামূল্যে ব্যবহার করুন</li>
+        </ul>
+      </div>
+    </aside>
+
+    <div class="lg-main">
+      <div class="lg-head">
+        <h1 id="ttl">স্বাগতম</h1>
+        <p id="sub2">যোগাযোগের তথ্য দেখতে ও পোস্ট করতে লগইন করুন</p>
+      </div>
+
+      <div class="lg-tabs" id="tabs" data-m="in" role="tablist">
+        <button type="button" class="on" data-t="in" role="tab">লগইন</button>
+        <button type="button" data-t="up" role="tab">নতুন একাউন্ট</button>
+      </div>
+
+      <form id="f" novalidate>
+        <div class="field hide" id="fn">
+          <label for="name">আপনার নাম</label>
+          <div class="lg-in"><i data-ic="lucide:user"></i><input id="name" name="name" autocomplete="name" placeholder="আপনার নাম লিখুন"></div>
+          <span class="err">নাম লিখুন</span>
+        </div>
+        <div class="field" id="fp">
+          <label for="phone">মোবাইল নম্বর</label>
+          <div class="lg-in"><span class="lg-cc"><svg class="flag-bd" viewBox="0 0 30 18" width="24" height="15" aria-hidden="true"><rect width="30" height="18" rx="2.5" fill="#006a4e"/><circle cx="13.5" cy="9" r="5.4" fill="#f42a41"/></svg><b>+88</b></span><input id="phone" name="phone" inputmode="numeric" maxlength="11" autocomplete="tel" placeholder="মোবাইল নম্বর লিখুন"></div>
+          <span class="err">সঠিক 11 ডিজিটের নম্বর দিন</span>
+        </div>
+        <div class="field" id="fw">
+          <label for="pass">পাসওয়ার্ড</label>
+          <div class="lg-in"><i data-ic="lucide:lock"></i><input id="pass" name="pass" type="password" autocomplete="current-password" placeholder="পাসওয়ার্ড লিখুন"><button type="button" class="lg-eye" id="eye" aria-label="পাসওয়ার্ড দেখুন"><i data-ic="lucide:eye"></i></button></div>
+          <span class="err"></span>
+        </div>
+        <button class="btn btn-green btn-block lg-submit" id="sub">লগইন করুন</button>
+      </form>
+
+      <p class="lg-switch" id="swt">নতুন এসেছেন? <button type="button" id="swb">একাউন্ট খুলুন</button></p>
+      <div class="demo"><b>ডেমো লগইন</b><br>অ্যাডমিন: <span>01700000000</span> / <span>admin123</span><br>ইউজার: <span>01711111111</span> / <span>123456</span></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const next = new URLSearchParams(location.search).get('next') || 'index.html';
+  if (KB.me()) { location.replace(next); return; }
+  const f = document.getElementById('f'); let mode = 'in';
+  const $ = id => document.getElementById(id);
+  const setMode = m => {
+    mode = m; $('tabs').dataset.m = m;
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x.dataset.t === m));
+    $('fn').classList.toggle('hide', m === 'in');
+    $('sub').textContent = m === 'in' ? 'লগইন করুন' : 'একাউন্ট খুলুন';
+    $('ttl').textContent = m === 'in' ? 'স্বাগতম' : 'নতুন একাউন্ট';
+    $('sub2').textContent = m === 'in' ? 'যোগাযোগের তথ্য দেখতে ও পোস্ট করতে লগইন করুন' : 'কয়েক সেকেন্ডেই একাউন্ট খুলে ফেলুন';
+    $('swt').firstChild.textContent = m === 'in' ? 'নতুন এসেছেন? ' : 'আগেই একাউন্ট আছে? ';
+    $('swb').textContent = m === 'in' ? 'একাউন্ট খুলুন' : 'লগইন করুন';
+    $('pass').autocomplete = m === 'in' ? 'current-password' : 'new-password';
+    document.querySelectorAll('.field').forEach(x => x.classList.remove('bad'));
+  };
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setMode(b.dataset.t));
+  $('swb').onclick = () => setMode(mode === 'in' ? 'up' : 'in');
+  $('eye').onclick = () => {
+    const show = $('pass').type === 'password';
+    $('pass').type = show ? 'text' : 'password';
+    $('eye').firstChild.innerHTML = KB.ic(show ? 'lucide:eye-off' : 'lucide:eye');
+  };
+  const bad = (id, msg) => { const el = $(id); el.classList.add('bad'); if (msg) el.querySelector('.err').textContent = msg; };
+  f.onsubmit = e => {
+    e.preventDefault();
+    document.querySelectorAll('.field').forEach(x => x.classList.remove('bad'));
+    const v = Object.fromEntries(new FormData(f)); let ok = true;
+    if (mode === 'up' && v.name.trim().length < 2) { bad('fn'); ok = false; }
+    if (!/^01[3-9]\d{8}$/.test(v.phone)) { bad('fp'); ok = false; }
+    if (v.pass.length < 6) { bad('fw', 'কমপক্ষে 6 অক্ষরের পাসওয়ার্ড দিন'); ok = false; }
+    if (!ok) return;
+    const u = mode === 'in' ? KB.loginUser(v.phone, v.pass) : KB.register(v.name.trim(), v.phone, v.pass);
+    if (u && u.blocked) return bad('fw', 'এই একাউন্টটি বন্ধ করা আছে');
+    if (!u) return bad(mode === 'in' ? 'fw' : 'fp', mode === 'in' ? 'নম্বর বা পাসওয়ার্ড ভুল' : 'এই নম্বরে আগেই একাউন্ট আছে');
+    location.href = next;
+  };
+})();
+</script>
+</body>
+</html>
