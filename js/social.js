@@ -38,7 +38,7 @@ const Social = (() => {
   const shares = id => Math.floor(hash(id, 8) * 9) + ((get('shares', {}))[id] || 0);
   const clikes = () => get('clikes', {});
   const isSaved = id => { const u = me(); return !!u && (get('saved', {})[u.id] || []).includes(id); };
-  const postUrl = id => new URL('post.html?id=' + id, location.href).href;
+  const postUrl = id => new URL('/post?id=' + id, location.origin).href;
 
   // UI state (survives re-render)
   const open = new Set(), full = new Set(), drafts = {};
@@ -73,7 +73,7 @@ const Social = (() => {
           <div class="cm-meta"><span>${ago(x.ts)}</span><button data-soc="clike" data-cid="${x.id}" class="${liked ? 'on' : ''}">লাইক</button><button data-soc="reply" data-name="${esc(x.name)}">উত্তর দিন</button>${own ? `<button data-soc="cdel" data-cid="${x.id}">মুছুন</button>` : ''}</div></div></div>`;
       }).join('')}
       ${u ? `<div class="cm-in">${avatar(u, 'sm')}<input data-cin placeholder="মন্তব্য লিখুন…" value="${esc(drafts[p.id] || '')}" maxlength="300"><button data-soc="csend" aria-label="পাঠান">${ic('lucide:send')}</button></div>`
-        : `<a class="cm-login" href="login.html?next=${encodeURIComponent(location.pathname.split('/').pop() + location.search)}">${ic('lucide:message-circle')} মন্তব্য করতে লগইন করুন</a>`}
+        : `<a class="cm-login" href="/login?next=${encodeURIComponent(location.pathname + location.search)}">${ic('lucide:message-circle')} মন্তব্য করতে লগইন করুন</a>`}
     </div>`;
   };
   const block = p => `<div class="soc" data-id="${p.id}">${inner(p)}</div>`;
@@ -87,7 +87,7 @@ const Social = (() => {
   const need = id => {
     if (me()) return true;
     toast('এই কাজের জন্য লগইন করুন');
-    setTimeout(() => { location.href = 'login.html?next=' + encodeURIComponent(location.pathname.split('/').pop() + location.search + '#p-' + id); }, 700);
+    setTimeout(() => { location.href = '/login?next=' + encodeURIComponent(location.pathname + location.search + '#p-' + id); }, 700);
     return false;
   };
   const setReact = (id, k) => {

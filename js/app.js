@@ -151,8 +151,8 @@ const KB = (() => {
     const u = { id: Date.now(), name, phone, pass, role: 'user' };
     list.push(u); set('users', list); set('session', u.id); return u;
   };
-  const logout = () => { localStorage.removeItem('kb_session'); location.href = 'index.html'; };
-  const requireLogin = () => { if (!me()) { location.href = 'login.html?next=' + encodeURIComponent(location.pathname.split('/').pop() + location.search); return false; } return true; };
+  const logout = () => { localStorage.removeItem('kb_session'); location.href = '/'; };
+  const requireLogin = () => { if (!me()) { location.href = '/login?next=' + encodeURIComponent(location.pathname + location.search); return false; } return true; };
 
 
   // ডেমো: কয়েকটি পোস্টে একাধিক ছবি, যাতে কোলাজ দেখা যায়
@@ -274,7 +274,7 @@ const KB = (() => {
   }).join('');
   const blogCard = b => {
     const au = users().find(x => x.id === b.authorId);
-    return `<a class="bcard" href="blog.html?id=${b.id}">
+    return `<a class="bcard" href="/blog?id=${b.id}">
       <div class="bcard-img"><img src="${esc(b.cover)}" alt="" loading="lazy" decoding="async"><span class="bcard-tag">${esc(b.cat)}</span></div>
       <div class="bcard-body">
         <div class="bcard-meta"><span>${ic('lucide:calendar')} ${fmtDate(b.createdAt)}</span><span>${ic('lucide:clock')} ${bn(readMin(b.body))} মিনিট</span></div>
@@ -299,14 +299,14 @@ const KB = (() => {
     const link = (href, key, t) => `<a href="${href}" class="${active === key ? 'on' : ''}">${t}</a>`;
     document.getElementById('nav').innerHTML = `
     <header class="nav"><div class="wrap nav-in">
-      <a class="brand" href="index.html"><img src="logo.png" alt="খামারি বাজার" height="52"><b class="brand-name">খামারি বাজার</b></a>
-      <nav class="nav-links">${link('index.html', 'home', 'হোম')}${link('feed.html', 'browse', 'পশু দেখুন')}${link('blogs.html', 'blog', 'ব্লগ')}${link('sell.html', 'sell', 'বিক্রি করুন')}${u && u.role === 'admin' ? link('admin.html', 'admin', 'অ্যাডমিন') : ''}</nav>
+      <a class="brand" href="/"><img src="logo.png" alt="খামারি বাজার" height="52"><b class="brand-name">খামারি বাজার</b></a>
+      <nav class="nav-links">${link('/', 'home', 'হোম')}${link('/feed', 'browse', 'পশু দেখুন')}${link('/blogs', 'blog', 'ব্লগ')}${link('/sell', 'sell', 'বিক্রি করুন')}${u && u.role === 'admin' ? link('/admin', 'admin', 'অ্যাডমিন') : ''}</nav>
       <form class="nav-search" id="navSearch">${I.search}<input type="search" placeholder="গরু, ছাগল, মুরগি খুঁজুন…" aria-label="খুঁজুন"></form>
       <div class="nav-actions">
-        <a class="btn btn-amber btn-sm" href="sell.html">+ বিক্রি করুন</a>
+        <a class="btn btn-amber btn-sm" href="/sell">+ বিক্রি করুন</a>
         ${u ? `<div class="menu" id="umenu"><button class="user-btn" aria-haspopup="true">${avatar(u)}<span>${esc(u.name.split(' ')[0])}</span></button>
-          <div class="menu-pop"><a href="my.html">আমার পোস্ট</a>${u.role === 'admin' ? '<a href="admin.html">অ্যাডমিন প্যানেল</a>' : ''}<button id="lo">লগআউট</button></div></div>`
-        : '<a class="btn btn-ghost btn-sm" href="login.html">লগইন</a>'}
+          <div class="menu-pop"><a href="/my">আমার পোস্ট</a>${u.role === 'admin' ? '<a href="/admin">অ্যাডমিন প্যানেল</a>' : ''}<button id="lo">লগআউট</button></div></div>`
+        : '<a class="btn btn-ghost btn-sm" href="/login">লগইন</a>'}
         <button class="burger" id="burger" aria-label="মেনু">${I.menu}</button>
       </div></div></header>
     <div class="drawer" id="drawer"><div class="bg"></div><aside class="pan" role="dialog" aria-label="মেনু">
@@ -314,29 +314,29 @@ const KB = (() => {
         <button class="dr-x" id="drx" aria-label="বন্ধ করুন">${ic('lucide:x')}</button>
         <div class="dr-brand"><img src="logo.png" alt="" class="dr-logo"><b>খামারি বাজার</b></div>
         ${u ? `<div class="dr-user">${avatar(u, 'big')}<div><b>${esc(u.name)}</b><small>${bn(esc(u.phone))}${u.role === 'admin' ? ' · অ্যাডমিন' : ''}</small></div></div>`
-          : `<div class="dr-guest"><b>স্বাগতম!</b><small>লগইন করলে যোগাযোগ নম্বর দেখতে পাবেন</small><a class="btn btn-amber btn-sm" href="login.html">লগইন / রেজিস্ট্রেশন</a></div>`}
+          : `<div class="dr-guest"><b>স্বাগতম!</b><small>লগইন করলে যোগাযোগ নম্বর দেখতে পাবেন</small><a class="btn btn-amber btn-sm" href="/login">লগইন / রেজিস্ট্রেশন</a></div>`}
       </div>
       <div class="dr-body">
-        <a class="dr-sell" href="sell.html"><span>${ic('lucide:plus')}</span><div><b>বিক্রি করুন</b><small>বিনামূল্যে পোস্ট দিন</small></div><i>${ic('lucide:chevron-right')}</i></a>
+        <a class="dr-sell" href="/sell"><span>${ic('lucide:plus')}</span><div><b>বিক্রি করুন</b><small>বিনামূল্যে পোস্ট দিন</small></div><i>${ic('lucide:chevron-right')}</i></a>
         <h5>ক্যাটাগরি</h5>
-        <div class="dr-cats">${CATS.map(c => `<a href="feed.html?cat=${c.id}"><i>${catPic(c)}</i>${c.name}</a>`).join('')}</div>
+        <div class="dr-cats">${CATS.map(c => `<a href="/feed?cat=${c.id}"><i>${catPic(c)}</i>${c.name}</a>`).join('')}</div>
         <h5>মেনু</h5>
         <nav class="dr-nav">
-          <a href="index.html"><i>${ic('lucide:house')}</i>হোম<em>${ic('lucide:chevron-right')}</em></a>
-          <a href="feed.html"><i>${ic('game-icons:cow')}</i>সব পশু দেখুন<em>${ic('lucide:chevron-right')}</em></a>
-          <a href="blogs.html"><i>${ic('lucide:book-open')}</i>ব্লগ<em>${ic('lucide:chevron-right')}</em></a>
-          ${u ? `<a href="my.html"><i>${ic('lucide:clipboard-list')}</i>আমার পোস্ট<em>${ic('lucide:chevron-right')}</em></a>${u.role === 'admin' ? `<a href="admin.html"><i>${ic('lucide:shield-check')}</i>অ্যাডমিন প্যানেল<em>${ic('lucide:chevron-right')}</em></a>` : ''}` : ''}
+          <a href="/"><i>${ic('lucide:house')}</i>হোম<em>${ic('lucide:chevron-right')}</em></a>
+          <a href="/feed"><i>${ic('game-icons:cow')}</i>সব পশু দেখুন<em>${ic('lucide:chevron-right')}</em></a>
+          <a href="/blogs"><i>${ic('lucide:book-open')}</i>ব্লগ<em>${ic('lucide:chevron-right')}</em></a>
+          ${u ? `<a href="/my"><i>${ic('lucide:clipboard-list')}</i>আমার পোস্ট<em>${ic('lucide:chevron-right')}</em></a>${u.role === 'admin' ? `<a href="/admin"><i>${ic('lucide:shield-check')}</i>অ্যাডমিন প্যানেল<em>${ic('lucide:chevron-right')}</em></a>` : ''}` : ''}
         </nav>
       </div>
       ${u ? `<button class="dr-out" id="lo2">${ic('lucide:log-out')} লগআউট</button>` : ''}
       <p class="dr-copy">© ${bn(new Date().getFullYear())} খামারি বাজার। সর্বস্বত্ব সংরক্ষিত।</p>
     </aside></div>
     <nav class="tabbar">
-      <a href="index.html" class="${active === 'home' ? 'on' : ''}">${I.home}হোম</a>
-      <a href="feed.html" class="${active === 'browse' ? 'on' : ''}">${I.grid}ফিড</a>
-      <a href="sell.html" class="plus" aria-label="বিক্রি করুন">${I.plus}</a>
-      <a href="feed.html?s=1">${I.search}খুঁজুন</a>
-      <a href="${u ? 'my.html' : 'login.html'}" class="${active === 'my' ? 'on' : ''}">${I.user}${u ? 'আমার' : 'লগইন'}</a>
+      <a href="/" class="${active === 'home' ? 'on' : ''}">${I.home}হোম</a>
+      <a href="/feed" class="${active === 'browse' ? 'on' : ''}">${I.grid}ফিড</a>
+      <a href="/sell" class="plus" aria-label="বিক্রি করুন">${I.plus}</a>
+      <a href="/feed?s=1">${I.search}খুঁজুন</a>
+      <a href="${u ? '/my' : '/login'}" class="${active === 'my' ? 'on' : ''}">${I.user}${u ? 'আমার' : 'লগইন'}</a>
     </nav>`;
     const $ = id => document.getElementById(id);
     const dr = (on) => { $('drawer').classList.toggle('open', on); document.body.style.overflow = on ? 'hidden' : ''; };
@@ -352,7 +352,7 @@ const KB = (() => {
     $('navSearch').onsubmit = e => {
       e.preventDefault();
       const q = e.target.querySelector('input').value.trim();
-      location.href = 'index.html?q=' + encodeURIComponent(q) + '#feed';
+      location.href = '/?q=' + encodeURIComponent(q) + '#feed';
     };
   }
 
@@ -365,7 +365,7 @@ const KB = (() => {
     const blogSec = bl.length ? `
     <section class="fblogs"><div class="wrap">
       <div class="fb-head"><div><span class="fb-k">${ic('lucide:book-open')} আমাদের ব্লগ</span><h2>খামার ও পশু পালনের কাজের টিপস</h2></div>
-        <a class="btn btn-green" href="blogs.html">সব ব্লগ দেখুন ${ic('lucide:arrow-right')}</a></div>
+        <a class="btn btn-green" href="/blogs">সব ব্লগ দেখুন ${ic('lucide:arrow-right')}</a></div>
       <div class="fb-grid">${bl.map(blogCard).join('')}</div>
     </div></section>` : '';
     el.innerHTML = blogSec + `
@@ -377,16 +377,16 @@ const KB = (() => {
             <img class="ft-logo" src="logo.png" alt="খামারি বাজার" height="64">
             <p>গ্রাম থেকে সরাসরি চাষির হাত থেকে আপনার বাজার। গরু, ছাগল, মুরগিসহ সব ধরনের পশু, দাম দেখে সরাসরি খামারির সঙ্গে যোগাযোগ করুন।</p>
             <div class="ft-soc"><a href="#" aria-label="ফেসবুক">${ic('fa6-brands:facebook')}</a><a href="#" aria-label="হোয়াটসঅ্যাপ">${ic('fa6-brands:whatsapp')}</a><a href="#" aria-label="টেলিগ্রাম">${ic('fa6-brands:telegram')}</a></div>
-            <a class="ft-sell" href="sell.html">${ic('lucide:plus')} পশু বিক্রি করুন</a>
+            <a class="ft-sell" href="/sell">${ic('lucide:plus')} পশু বিক্রি করুন</a>
           </div>
           <div class="ft-col"><h4>দ্রুত লিংক</h4>
-            ${L('index.html', 'হোম')}${L('feed.html', 'সব পশু দেখুন')}${L('sell.html', 'বিক্রি করুন')}${L('blogs.html', 'ব্লগ')}${u ? L('my.html', 'আমার পোস্ট') : L('login.html', 'লগইন / রেজিস্ট্রেশন')}${u && u.role === 'admin' ? L('admin.html', 'অ্যাডমিন প্যানেল') : ''}</div>
+            ${L('/', 'হোম')}${L('/feed', 'সব পশু দেখুন')}${L('/sell', 'বিক্রি করুন')}${L('/blogs', 'ব্লগ')}${u ? L('/my', 'আমার পোস্ট') : L('/login', 'লগইন / রেজিস্ট্রেশন')}${u && u.role === 'admin' ? L('/admin', 'অ্যাডমিন প্যানেল') : ''}</div>
           <div class="ft-col"><h4>ক্যাটাগরি</h4>
-            ${CATS.slice(0, 7).map(c => L(`feed.html?cat=${c.id}`, c.name)).join('')}${L('feed.html', 'সব ক্যাটাগরি')}</div>
+            ${CATS.slice(0, 7).map(c => L(`/feed?cat=${c.id}`, c.name)).join('')}${L('/feed', 'সব ক্যাটাগরি')}</div>
           <div class="ft-col"><h4>জনপ্রিয় জেলা</h4>
-            ${dist.map(d => L(`feed.html?q=${encodeURIComponent(d)}`, d)).join('')}</div>
+            ${dist.map(d => L(`/feed?q=${encodeURIComponent(d)}`, d)).join('')}</div>
           <div class="ft-col"><h4>সহায়তা</h4>
-            ${L('index.html#feed', 'কীভাবে কাজ করে')}${L('index.html#feed', 'নিরাপদ কেনাকাটা')}${L('#', 'আমাদের সম্পর্কে')}${L('#', 'যোগাযোগ')}${L('#', 'গোপনীয়তা নীতি')}${L('#', 'শর্তাবলী')}</div>
+            ${L('/#feed', 'কীভাবে কাজ করে')}${L('/#feed', 'নিরাপদ কেনাকাটা')}${L('#', 'আমাদের সম্পর্কে')}${L('#', 'যোগাযোগ')}${L('#', 'গোপনীয়তা নীতি')}${L('#', 'শর্তাবলী')}</div>
         </div>
         <div class="ft-bot">
           <span class="ft-c">© ${bn(new Date().getFullYear())} খামারি বাজার। সর্বস্বত্ব সংরক্ষিত।</span>

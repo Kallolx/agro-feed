@@ -9,14 +9,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610040432">
-<link rel="stylesheet" href="css/detail.css?v=202610040432">
+<link rel="stylesheet" href="css/style.css?v=202610040436">
+<link rel="stylesheet" href="css/detail.css?v=202610040436">
 </head>
 <body>
 <div id="nav"></div>
-<script src="js/icons.js?v=202610040432"></script>
-<script src="js/app.js?v=202610040432"></script>
-<script src="js/social.js?v=202610040432"></script>
+<script src="js/icons.js?v=202610040436"></script>
+<script src="js/app.js?v=202610040436"></script>
+<script src="js/social.js?v=202610040436"></script>
 <script>KB.mountNav('browse')</script>
 <main class="wrap dwrap" id="root"></main>
 <div class="lb" id="lb"><button class="lx" aria-label="বন্ধ করুন" id="lbx"></button><button class="lp" aria-label="আগের" id="lbp"></button><img alt="" id="lbi"><button class="ln" aria-label="পরের" id="lbn"></button></div>
@@ -29,13 +29,13 @@
   const root = document.getElementById('root');
   const u = me();
   if (!p || (p.status !== 'approved' && !(u && (u.role === 'admin' || u.id === p.sellerId)))) {
-    root.innerHTML = `<div class="empty card"><i>${ic('lucide:paw-print')}</i><h3>পোস্টটি পাওয়া যায়নি</h3><a class="btn btn-green" href="index.html" style="margin-top:12px">হোমে ফিরুন</a></div>`;
+    root.innerHTML = `<div class="empty card"><i>${ic('lucide:paw-print')}</i><h3>পোস্টটি পাওয়া যায়নি</h3><a class="btn btn-green" href="/" style="margin-top:12px">হোমে ফিরুন</a></div>`;
     return;
   }
   const c = catOf(p.cat), seller = users().find(x => x.id === p.sellerId);
   const imgs = p.images.length ? p.images : [ph(c.icon)];
   document.title = p.title + ' | খামারি বাজার';
-  const next = encodeURIComponent('post.html?id=' + p.id);
+  const next = encodeURIComponent('/post?id=' + p.id);
   const unit = p.ptype === 'kg' ? 'কেজি' : 'প্রতিটি';
   const est = p.ptype === 'kg' ? p.price * p.total : p.price * p.count;
   const lock = `<span class="lk">${ic('lucide:lock')} লগইন করুন</span>`;
@@ -51,15 +51,15 @@
     </div>` : `
     <div class="dlock"><div class="blur"><b>মোবাইল: 01●●●●●●●●●</b><br>ঠিকানা: ●●●●●●●●, ●●●●●●<br>হোয়াটসঅ্যাপ: ●●●●●●●●●●●</div>
       <div class="gate">${ic('lucide:lock')}<b>যোগাযোগ নম্বর ও পূর্ণ ঠিকানা দেখতে লগইন করুন</b><div class="hint">বিনামূল্যে মাত্র 1 মিনিটে একাউন্ট খুলুন</div>
-        <a class="btn btn-amber" href="login.html?next=${next}">লগইন / রেজিস্ট্রেশন</a></div></div>`;
+        <a class="btn btn-amber" href="/login?next=${next}">লগইন / রেজিস্ট্রেশন</a></div></div>`;
 
   const sim = posts().filter(x => x.status === 'approved' && x.cat === p.cat && x.id !== p.id).slice(0, 3);
 
   root.innerHTML = `
   <nav class="bc" aria-label="নেভিগেশন">
-    <a href="index.html">${ic('lucide:house')}<span class="t-home">হোম</span></a>
+    <a href="/">${ic('lucide:house')}<span class="t-home">হোম</span></a>
     <span class="bc-s">${ic('lucide:chevron-right')}</span>
-    <a href="feed.html?cat=${esc(c.id)}">${catPic(c)}<span>${esc(c.name)}</span></a>
+    <a href="/feed?cat=${esc(c.id)}">${catPic(c)}<span>${esc(c.name)}</span></a>
     <span class="bc-s">${ic('lucide:chevron-right')}</span>
     <b class="bc-cur" title="${esc(p.title)}">${esc(p.title)}</b>
   </nav>
@@ -106,7 +106,7 @@
   </div>
 
   ${sim.length ? `<section class="dsim"><h2>${ic('lucide:layers')} এই ক্যাটাগরির আরও পোস্ট</h2><div class="simgrid">${sim.map(x => `
-    <a class="sim" href="post.html?id=${x.id}"><img src="${x.images[0] || ph(c.icon)}" alt="" loading="lazy"><div><h4>${esc(x.title)}</h4><p><b>${money(x.price)}</b><span>${ic('lucide:map-pin')} ${esc(x.district)}</span></p></div></a>`).join('')}</div></section>` : ''}`;
+    <a class="sim" href="/post?id=${x.id}"><img src="${x.images[0] || ph(c.icon)}" alt="" loading="lazy"><div><h4>${esc(x.title)}</h4><p><b>${money(x.price)}</b><span>${ic('lucide:map-pin')} ${esc(x.district)}</span></p></div></a>`).join('')}</div></section>` : ''}`;
 
   // ---------- gallery ----------
   let cur = 0;

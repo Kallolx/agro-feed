@@ -103,7 +103,7 @@
           <div class="soc-menu"><button data-soc="save">${ic('lucide:bookmark')}<em>সংরক্ষণ করুন</em></button>
             <button data-soc="copy">${ic('lucide:link')}<em>লিংক কপি করুন</em></button>
             <button data-soc="report">${ic('lucide:flag')}<em>রিপোর্ট করুন</em></button></div></div></header>
-      <h3 class="pc-t"><a href="post.html?id=${p.id}">${esc(p.title)}</a></h3>
+      <h3 class="pc-t"><a href="/post?id=${p.id}">${esc(p.title)}</a></h3>
       <div class="pc-dw"><p class="pc-d">${esc(p.desc)}</p><button class="pc-dm hide" data-dmore>আরও দেখুন</button></div>
       ${gallery(p)}
       <div class="pc-row">
@@ -113,7 +113,7 @@
           <div><dt>গড় ওজন</dt><dd>${bn(p.avg)} কেজি</dd></div>
           <div><dt>মোট ওজন</dt><dd>${bn(p.total)} কেজি</dd></div>
         </dl>
-        <a class="pc-btn" href="post.html?id=${p.id}">${KB.me() ? '' : ic('lucide:lock') + ' '}বিস্তারিত ${ic('lucide:arrow-right')}</a>
+        <a class="pc-btn" href="/post?id=${p.id}">${KB.me() ? '' : ic('lucide:lock') + ' '}বিস্তারিত ${ic('lucide:arrow-right')}</a>
       </div>
       ${Social.block(p)}
     </article>`;
@@ -140,7 +140,7 @@
     const p = new URLSearchParams();
     if (S.cat) p.set('cat', S.cat); if (S.breed) p.set('breed', S.breed); if (S.dist) p.set('dist', S.dist);
     if (S.min) p.set('min', S.min); if (S.max) p.set('max', S.max); if (S.q) p.set('q', S.q); if (S.sort !== 'new') p.set('sort', S.sort);
-    const s = p.toString(); return 'feed.html' + (s ? '?' + s : '');
+    const s = p.toString(); return '/feed' + (s ? '?' + s : '');
   }
   function syncMore() {
     const el = document.getElementById('seeAll');

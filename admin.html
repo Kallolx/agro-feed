@@ -10,14 +10,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610040432">
-<link rel="stylesheet" href="css/admin.css?v=202610040432">
+<link rel="stylesheet" href="css/style.css?v=202610040436">
+<link rel="stylesheet" href="css/admin.css?v=202610040436">
 </head>
 <body class="adm">
 <div id="app"></div>
 <div class="modal" id="modal"><div class="box wide" id="mbox"></div></div>
-<script src="js/icons.js?v=202610040432"></script>
-<script src="js/app.js?v=202610040432"></script>
+<script src="js/icons.js?v=202610040436"></script>
+<script src="js/app.js?v=202610040436"></script>
 <script>
 (() => {
   const { CATS, catOf, ic, esc, bn, money, ago, ph, posts, savePosts, users, me, toast, avatar, catPic } = KB;
@@ -27,7 +27,7 @@
   // ---------- access gate ----------
   if (!u) { KB.requireLogin(); return; }
   if (u.role !== 'admin') {
-    app.innerHTML = `<div class="wrap" style="padding-top:60px"><div class="empty-a"><i>${ic('lucide:ban')}</i><h3>শুধু অ্যাডমিনের জন্য</h3><p>এই পেজ দেখার অনুমতি আপনার নেই।</p><a class="btn btn-green" href="index.html" style="margin-top:14px">হোমে ফিরুন</a></div></div>`;
+    app.innerHTML = `<div class="wrap" style="padding-top:60px"><div class="empty-a"><i>${ic('lucide:ban')}</i><h3>শুধু অ্যাডমিনের জন্য</h3><p>এই পেজ দেখার অনুমতি আপনার নেই।</p><a class="btn btn-green" href="/" style="margin-top:14px">হোমে ফিরুন</a></div></div>`;
     return;
   }
 
@@ -45,7 +45,7 @@
       <nav class="adm-nav" id="anav"></nav>
       <div class="adm-foot">
         <div class="adm-me">${avatar(u)}<div><b>${esc(u.name)}</b><small>অ্যাডমিন</small></div></div>
-        <a href="index.html">${ic('lucide:external-link')} সাইট দেখুন</a>
+        <a href="/">${ic('lucide:external-link')} সাইট দেখুন</a>
         <button id="alo">${ic('lucide:log-out')} লগআউট</button>
       </div>
     </aside>
@@ -153,7 +153,7 @@
           <p><span>${ic('lucide:map-pin')} ${esc(p.district)}</span><span>${ic('lucide:user')} ${esc(s?.name || '-')} · ${bn(p.phone)}</span><span>${ago(p.createdAt)}</span></p>
           ${p.reason ? `<p class="why">কারণ: ${esc(p.reason)}</p>` : ''}</div>
         <div class="acts-row">
-          <a class="ib" href="post.html?id=${p.id}" target="_blank" rel="noopener" aria-label="দেখুন">${ic('lucide:eye')}</a>
+          <a class="ib" href="/post?id=${p.id}" target="_blank" rel="noopener" aria-label="দেখুন">${ic('lucide:eye')}</a>
           ${p.status !== 'approved' ? `<button class="ib ok" data-a="ok" data-id="${p.id}" aria-label="অনুমোদন">${ic('lucide:check')}</button>` : ''}
           ${p.status !== 'rejected' ? `<button class="ib" data-a="no" data-id="${p.id}" aria-label="বাতিল">${ic('lucide:x')}</button>` : ''}
           <button class="ib" data-a="del" data-id="${p.id}" aria-label="মুছুন">${ic('lucide:trash')}</button></div></div>`;
@@ -269,7 +269,7 @@
           <h4>${esc(b.title)}</h4>
           <p><span>${ic('lucide:tags')} ${esc(b.cat)}</span><span>${ic('lucide:calendar')} ${KB.fmtDate(b.createdAt)}</span><span>${ic('lucide:clock')} ${bn(KB.readMin(b.body))} মিনিট</span></p></div>
         <div class="acts-row">
-          <a class="ib" href="blog.html?id=${b.id}" target="_blank" rel="noopener" aria-label="দেখুন">${ic('lucide:eye')}</a>
+          <a class="ib" href="/blog?id=${b.id}" target="_blank" rel="noopener" aria-label="দেখুন">${ic('lucide:eye')}</a>
           <button class="ib" data-b="edit" data-id="${b.id}" aria-label="এডিট">${ic('lucide:pencil')}</button>
           <button class="ib ${b.published === false ? 'ok' : ''}" data-b="pub" data-id="${b.id}" aria-label="প্রকাশ বা খসড়া" title="${b.published === false ? 'প্রকাশ করুন' : 'খসড়ায় নিন'}">${ic(b.published === false ? 'lucide:circle-check' : 'lucide:eye-off')}</button>
           <button class="ib" data-b="del" data-id="${b.id}" aria-label="মুছুন">${ic('lucide:trash')}</button></div></div>`).join('')

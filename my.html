@@ -9,15 +9,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610040432">
+<link rel="stylesheet" href="css/style.css?v=202610040436">
 </head>
 <body>
 <div id="nav"></div>
-<script src="js/icons.js?v=202610040432"></script>
-<script src="js/app.js?v=202610040432"></script>
+<script src="js/icons.js?v=202610040436"></script>
+<script src="js/app.js?v=202610040436"></script>
 <script>KB.mountNav('my')</script>
 <div class="wrap form-wrap">
-  <div class="page-h" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h1>আমার পোস্ট</h1><p id="who"></p></div><a class="btn btn-amber" href="sell.html">+ নতুন পোস্ট</a></div>
+  <div class="page-h" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h1>আমার পোস্ট</h1><p id="who"></p></div><a class="btn btn-amber" href="/sell">+ নতুন পোস্ট</a></div>
   <div id="list" style="margin-top:12px"></div>
 </div>
 <script>
@@ -31,8 +31,8 @@
     <div class="arow"><img src="${p.images[0] || ph(catOf(p.cat).icon)}" alt="">
       <div><span class="badge ${st[p.status][0]}">${st[p.status][1]}</span><h4 style="margin-top:4px">${esc(p.title)}</h4>
         <p>${money(p.price)} · ${esc(p.district)} · ${ago(p.createdAt)}</p>${p.status === 'rejected' && p.reason ? `<p style="color:#b3261e">কারণ: ${esc(p.reason)}</p>` : ''}</div>
-      <div class="acts"><a class="btn btn-line btn-sm" href="post.html?id=${p.id}">দেখুন</a><button class="btn btn-danger btn-sm" data-d="${p.id}">মুছুন</button></div></div>`).join('')
-    : `<div class="empty card"><i>${KB.ic('lucide:inbox')}</i><h3>এখনো কোনো পোস্ট নেই</h3><a class="btn btn-green" style="margin-top:12px" href="sell.html">প্রথম পোস্ট দিন</a></div>`;
+      <div class="acts"><a class="btn btn-line btn-sm" href="/post?id=${p.id}">দেখুন</a><button class="btn btn-danger btn-sm" data-d="${p.id}">মুছুন</button></div></div>`).join('')
+    : `<div class="empty card"><i>${KB.ic('lucide:inbox')}</i><h3>এখনো কোনো পোস্ট নেই</h3><a class="btn btn-green" style="margin-top:12px" href="/sell">প্রথম পোস্ট দিন</a></div>`;
   document.getElementById('list').onclick = e => {
     const b = e.target.closest('[data-d]'); if (!b || !confirm('পোস্টটি মুছে ফেলবেন?')) return;
     KB.savePosts(KB.posts().filter(p => p.id !== +b.dataset.d)); location.reload();
