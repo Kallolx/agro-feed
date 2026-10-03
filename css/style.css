@@ -1085,3 +1085,18 @@ body>main,body>.wrap,body>section,body>.adm-shell{flex:1 0 auto}
   .glb-th button{width:60px;height:46px}
   .glb-top{padding:10px 12px}
 }
+
+
+/* "see more" sits on the same line as the cut-off text, in blue */
+.pc-dw{position:relative}
+.pc-dm{display:inline-block;margin:0;padding:0}
+.pc-d:not(.open)+.pc-dm{position:absolute;right:16px;bottom:12px;padding-left:44px;font-size:inherit;line-height:1.65;font-weight:700;color:#1a73e8;background:linear-gradient(90deg,rgba(255,255,255,0),#fff 42%)}
+.pc-d:not(.open)+.pc-dm::before{content:"... ";color:#3a4d42;font-weight:400;position:absolute;left:18px}
+.pc-d.open+.pc-dm{display:block;margin-top:6px;color:#1a73e8;font-weight:700}
+.pc-dm:hover{text-decoration:underline;color:#0b57c8}
+@media(max-width:560px){.pc-d:not(.open)+.pc-dm{right:12px;bottom:10px}}
+
+/* comment count in brackets on the action button */
+.rl em{white-space:nowrap}
+.rl .cc{font-family:'Geist','Hind Siliguri',sans-serif;font-weight:600}
+@media(max-width:400px){.rl{gap:5px;font-size:13.5px}.soc-act{gap:2px}}

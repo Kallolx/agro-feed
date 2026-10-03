@@ -10,14 +10,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=202610040436">
-<link rel="stylesheet" href="css/admin.css?v=202610040436">
+<link rel="stylesheet" href="css/style.css?v=202610040451">
+<link rel="stylesheet" href="css/admin.css?v=202610040451">
 </head>
 <body class="adm">
 <div id="app"></div>
 <div class="modal" id="modal"><div class="box wide" id="mbox"></div></div>
-<script src="js/icons.js?v=202610040436"></script>
-<script src="js/app.js?v=202610040436"></script>
+<script src="js/icons.js?v=202610040451"></script>
+<script src="js/app.js?v=202610040451"></script>
 <script>
 (() => {
   const { CATS, catOf, ic, esc, bn, money, ago, ph, posts, savePosts, users, me, toast, avatar, catPic } = KB;
@@ -86,6 +86,50 @@
   $('modal').onclick = e => { if (e.target === $('modal') || e.target.closest('[data-close]')) closeModal(); };
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+  // ---------- জেনেরিক ডেটা টেবিল (সর্ট, পেজ, সিলেক্ট) ----------
+  const T = { posts: { page: 1, key: 'date', dir: -1, sel: new Set() }, users: { page: 1, key: 'name', dir: 1 }, blogs: { page: 1, key: 'date', dir: -1 }, cats: { page: 1 } };
+  const SIZE = 8;
+  const cmp = (a, b) => typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), 'bn');
+  // cols: [{ key, label, html(row), val(row)?, cls? }]  opt: { id(row), selectable, all, minw, empty }
+  function table(name, cols, rows, opt = {}) {
+    const st = T[name] || (T[name] = { page: 1 });
+    const size = opt.size || SIZE;
+    const sc = cols.find(c => c.key === st.key && c.val);
+    if (sc && !opt.all) rows = [...rows].sort((a, b) => cmp(sc.val(a), sc.val(b)) * st.dir);
+    const pages = Math.max(1, Math.ceil(rows.length / size)); st.page = Math.min(Math.max(1, st.page), pages);
+    const from = (st.page - 1) * size, slice = opt.all ? rows : rows.slice(from, from + size);
+    const sel = st.sel, allOn = opt.selectable && slice.length && slice.every(r => sel.has(opt.id(r)));
+    const th = (opt.selectable ? `<th class="c-chk"><input type="checkbox" data-selall="${name}" ${allOn ? 'checked' : ''} aria-label="সব বাছাই"></th>` : '') +
+      cols.map(c => c.val && !opt.all
+        ? `<th class="${c.cls || ''} sortable ${st.key === c.key ? 'on' : ''}" data-th="${name}:${c.key}" role="button" tabindex="0">${c.label}<i>${st.key === c.key ? ic(st.dir > 0 ? 'lucide:arrow-up' : 'lucide:arrow-down') : ''}</i></th>`
+        : `<th class="${c.cls || ''}">${c.label}</th>`).join('');
+    const body = slice.map(r => {
+      const on = opt.selectable && sel.has(opt.id(r));
+      return `<tr class="${on ? 'on' : ''}">${opt.selectable ? `<td class="c-chk"><input type="checkbox" data-sel="${name}" data-id="${opt.id(r)}" ${on ? 'checked' : ''} aria-label="বাছাই"></td>` : ''}${cols.map(c => `<td class="${c.cls || ''}">${c.html(r)}</td>`).join('')}</tr>`;
+    }).join('');
+    const nums = []; for (let i = Math.max(1, st.page - 2); i <= Math.min(pages, Math.max(5, st.page + 2)); i++) nums.push(i);
+    const foot = opt.all || rows.length <= size && pages === 1 ? (opt.all ? '' : `<div class="dt-foot"><span>মোট <b>${bn(rows.length)}</b>টি</span></div>`) :
+      `<div class="dt-foot"><span><b>${bn(from + 1)}-${bn(from + slice.length)}</b> / ${bn(rows.length)}টি</span>
+        <div class="dt-pg"><button data-pg="${name}:${st.page - 1}" ${st.page === 1 ? 'disabled' : ''} aria-label="আগের">${ic('lucide:chevron-left')}</button>
+          ${nums.map(i => `<button data-pg="${name}:${i}" class="${i === st.page ? 'on' : ''}">${bn(i)}</button>`).join('')}
+          <button data-pg="${name}:${st.page + 1}" ${st.page === pages ? 'disabled' : ''} aria-label="পরের">${ic('lucide:chevron-right')}</button></div></div>`;
+    if (!rows.length) return `<div class="dt-wrap"><div class="empty-a" style="box-shadow:none"><i>${ic(opt.emptyIcon || 'lucide:inbox')}</i>${opt.empty || 'কিছু পাওয়া যায়নি'}</div></div>`;
+    return `<div class="dt-wrap"><table class="dt" style="min-width:${opt.minw || 860}px"><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table></div>${foot}`;
+  }
+  const draw = n => ({ posts: drawPosts, users: drawUsers, blogs: drawBlogs, cats: drawCats })[n] ? ({ posts: drawPosts, users: drawUsers, blogs: drawBlogs, cats: drawCats })[n]() : render();
+  document.addEventListener('click', e => {
+    const th = e.target.closest('[data-th]');
+    if (th) { const [n, k] = th.dataset.th.split(':'), st = T[n]; if (st.key === k) st.dir *= -1; else { st.key = k; st.dir = 1; } st.page = 1; return draw(n); }
+    const pg = e.target.closest('[data-pg]');
+    if (pg && !pg.disabled) { const [n, p] = pg.dataset.pg.split(':'); T[n].page = +p; draw(n); const w = document.querySelector('.dt-wrap'); if (w) w.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  });
+  document.addEventListener('change', e => {
+    const one = e.target.closest('[data-sel]'), all = e.target.closest('[data-selall]');
+    if (one) { const s = T[one.dataset.sel].sel; one.checked ? s.add(+one.dataset.id) : s.delete(+one.dataset.id); draw(one.dataset.sel); }
+    else if (all) { const n = all.dataset.selall, s = T[n].sel; document.querySelectorAll(`[data-sel="${n}"]`).forEach(c => all.checked ? s.add(+c.dataset.id) : s.delete(+c.dataset.id)); draw(n); }
+  });
+  const thumb = (src, alt = '') => `<img class="dt-img" src="${esc(src)}" alt="${alt}" loading="lazy">`;
+
   // ---------- dashboard ----------
   function renderDash() {
     const all = posts(), us_ = users();
@@ -113,14 +157,20 @@
         </div>
       </div>
       <div class="agrid">
-        <div class="panel"><div class="panel-h"><h3>${ic('lucide:clock')} পেন্ডিং রিভিউ</h3><button class="btn btn-line btn-sm" data-v="posts">সব দেখুন</button></div>
-          ${pend.length ? pend.slice(0, 5).map(p => `<div class="urow" style="grid-template-columns:minmax(0,1fr) auto;padding-left:0;padding-right:0">
-            <div class="uwho"><div style="min-width:0"><b>${esc(p.title)}</b><small>${ic(catOf(p.cat).icon)} ${esc(p.breed)} · ${esc(p.district)} · ${ago(p.createdAt)}</small></div></div>
-            <div class="acts-row"><button class="ib ok" data-a="ok" data-id="${p.id}" aria-label="অনুমোদন">${ic('lucide:check')}</button><button class="ib" data-a="no" data-id="${p.id}" aria-label="বাতিল">${ic('lucide:x')}</button></div></div>`).join('')
-            : `<div class="empty-a" style="box-shadow:none;padding:24px"><i>${ic('lucide:circle-check')}</i>কোনো পেন্ডিং পোস্ট নেই</div>`}
+        <div class="panel pt"><div class="panel-h"><h3>${ic('lucide:clock')} পেন্ডিং রিভিউ</h3><button class="btn btn-line btn-sm" data-v="posts">সব দেখুন</button></div>
+          ${table('dpend', [
+            { key: 'p', label: 'পোস্ট', html: p => `<div class="dt-cell">${thumb(p.images[0] || ph(catOf(p.cat).icon))}<div><b class="dt-t">${esc(p.title)}</b><small>${esc(p.breed)}</small></div></div>` },
+            { key: 'd', label: 'এলাকা', html: p => esc(p.district) },
+            { key: 't', label: 'সময়', html: p => ago(p.createdAt) },
+            { key: 'a', label: 'অ্যাকশন', cls: 'c-act', html: p => `<div class="acts-row"><button class="ib ok" data-a="ok" data-id="${p.id}" aria-label="অনুমোদন">${ic('lucide:check')}</button><button class="ib" data-a="no" data-id="${p.id}" aria-label="বাতিল">${ic('lucide:x')}</button></div>` },
+          ], pend.slice(0, 5), { all: true, minw: 520, empty: 'কোনো পেন্ডিং পোস্ট নেই', emptyIcon: 'lucide:circle-check' })}
         </div>
-        <div class="panel"><div class="panel-h"><h3>${ic('lucide:user-plus')} সর্বশেষ ইউজার</h3><button class="btn btn-line btn-sm" data-v="users">সব দেখুন</button></div>
-          ${us_.slice(-5).reverse().map(x => `<div class="urow" style="grid-template-columns:minmax(0,1fr);padding-left:0;padding-right:0"><div class="uwho">${avatar(x)}<div><b>${esc(x.name)}</b><small>${bn(x.phone)}</small></div></div></div>`).join('')}
+        <div class="panel pt"><div class="panel-h"><h3>${ic('lucide:user-plus')} সর্বশেষ ইউজার</h3><button class="btn btn-line btn-sm" data-v="users">সব দেখুন</button></div>
+          ${table('dusers', [
+            { key: 'u', label: 'ইউজার', html: x => `<div class="dt-cell">${avatar(x, 'sm')}<div><b class="dt-t">${esc(x.name)}</b></div></div>` },
+            { key: 'p', label: 'মোবাইল', html: x => bn(esc(x.phone)) },
+            { key: 'r', label: 'ভূমিকা', html: x => x.role === 'admin' ? '<span class="badge dark">অ্যাডমিন</span>' : '<span class="badge soft">ইউজার</span>' },
+          ], us_.slice(-5).reverse(), { all: true, minw: 420 })}
         </div>
       </div>`;
   }
@@ -135,56 +185,77 @@
         <div class="sbox">${ic('lucide:search')}<input id="pq" type="search" placeholder="পোস্ট, জাত বা এলাকা খুঁজুন" value="${esc(ps.q)}"></div>
         <select id="pc" aria-label="ক্যাটাগরি"><option value="" data-img="img/category/web/all.webp">সব ক্যাটাগরি</option>${CATS.map(c => `<option value="${c.id}"${c.img ? ` data-img="${esc(c.img)}"` : ''}>${esc(c.name)}</option>`).join('')}</select>
       </div>
+      <div id="bulk"></div>
       <div id="plist"></div>`;
     $('pc').value = ps.cat;
-    $('ptabs').onclick = e => { const b = e.target.closest('[data-t]'); if (b) { ps.tab = b.dataset.t; render(); } };
-    $('pq').oninput = e => { ps.q = e.target.value.trim(); drawPosts(); };
-    $('pc').onchange = e => { ps.cat = e.target.value; drawPosts(); };
+    const reset = () => { T.posts.page = 1; T.posts.sel.clear(); };
+    $('ptabs').onclick = e => { const b = e.target.closest('[data-t]'); if (b) { ps.tab = b.dataset.t; reset(); render(); } };
+    $('pq').oninput = e => { ps.q = e.target.value.trim(); reset(); drawPosts(); };
+    $('pc').onchange = e => { ps.cat = e.target.value; reset(); drawPosts(); };
     drawPosts();
   }
   function drawPosts() {
     const list = posts().filter(p => (ps.tab === 'all' || p.status === ps.tab) && (!ps.cat || p.cat === ps.cat) &&
-      (!ps.q || [p.title, p.breed, p.district, p.address, seller(p)?.name].join(' ').includes(ps.q))).sort((a, b) => b.createdAt - a.createdAt);
-    $('plist').innerHTML = list.length ? list.map(p => {
-      const s = seller(p), c = catOf(p.cat);
-      return `<div class="prow"><img src="${p.images[0] || ph(c.icon)}" alt="" loading="lazy">
-        <div style="min-width:0">${stBadge(p.status)}<h4>${esc(p.title)}</h4>
-          <p><span>${ic(c.icon)} ${esc(c.name)} · ${esc(p.breed)}</span><span>${bn(p.count)}টি · মোট ${bn(p.total)} কেজি</span><span><b>${money(p.price)}</b></span></p>
-          <p><span>${ic('lucide:map-pin')} ${esc(p.district)}</span><span>${ic('lucide:user')} ${esc(s?.name || '-')} · ${bn(p.phone)}</span><span>${ago(p.createdAt)}</span></p>
-          ${p.reason ? `<p class="why">কারণ: ${esc(p.reason)}</p>` : ''}</div>
-        <div class="acts-row">
-          <a class="ib" href="/post?id=${p.id}" target="_blank" rel="noopener" aria-label="দেখুন">${ic('lucide:eye')}</a>
-          ${p.status !== 'approved' ? `<button class="ib ok" data-a="ok" data-id="${p.id}" aria-label="অনুমোদন">${ic('lucide:check')}</button>` : ''}
-          ${p.status !== 'rejected' ? `<button class="ib" data-a="no" data-id="${p.id}" aria-label="বাতিল">${ic('lucide:x')}</button>` : ''}
-          <button class="ib" data-a="del" data-id="${p.id}" aria-label="মুছুন">${ic('lucide:trash')}</button></div></div>`;
-    }).join('') : `<div class="empty-a"><i>${ic('lucide:inbox')}</i>কোনো পোস্ট পাওয়া যায়নি</div>`;
+      (!ps.q || [p.title, p.breed, p.district, p.address, seller(p)?.name].join(' ').includes(ps.q)));
+    const sel = T.posts.sel; for (const id of [...sel]) if (!posts().some(p => p.id === id)) sel.delete(id);
+    $('bulk').innerHTML = sel.size ? `<div class="bulk"><b>${bn(sel.size)}টি নির্বাচিত</b>
+      <button class="btn btn-amber btn-sm" data-bulk="ok">${ic('lucide:check')} অনুমোদন</button>
+      <button class="btn btn-line btn-sm" data-bulk="no">${ic('lucide:x')} বাতিল</button>
+      <button class="btn btn-line btn-sm" data-bulk="del">${ic('lucide:trash')} মুছুন</button>
+      <button class="bulk-x" data-bulk="clear">নির্বাচন সরান</button></div>` : '';
+    $('plist').innerHTML = table('posts', [
+      { key: 'title', label: 'পোস্ট', val: p => p.title, html: p => `<div class="dt-cell">${thumb(p.images[0] || ph(catOf(p.cat).icon))}<div><b class="dt-t">${esc(p.title)}</b><small>${esc(p.breed)}${p.reason ? ` <span class="why">· কারণ: ${esc(p.reason)}</span>` : ''}</small></div></div>` },
+      { key: 'cat', label: 'ক্যাটাগরি', val: p => catOf(p.cat).name, html: p => `<span class="dt-cat">${catPic(catOf(p.cat))}${esc(catOf(p.cat).name)}</span>` },
+      { key: 'seller', label: 'বিক্রেতা', val: p => seller(p)?.name || '', html: p => { const s = seller(p); return `<div class="dt-cell">${avatar(s, 'sm')}<div><b class="dt-t">${esc(s?.name || '-')}</b><small>${bn(esc(p.phone))}</small></div></div>`; } },
+      { key: 'district', label: 'এলাকা', val: p => p.district, html: p => esc(p.district) },
+      { key: 'price', label: 'দাম', val: p => p.price, cls: 'c-num', html: p => `<b>${money(p.price)}</b>` },
+      { key: 'qty', label: 'পরিমাণ', val: p => p.count, cls: 'c-num', html: p => `${bn(p.count)}টি` },
+      { key: 'status', label: 'অবস্থা', val: p => p.status, html: p => stBadge(p.status) },
+      { key: 'date', label: 'সময়', val: p => p.createdAt, html: p => `<span class="dt-time">${ago(p.createdAt)}</span>` },
+      { key: 'act', label: 'অ্যাকশন', cls: 'c-act', html: p => `<div class="acts-row">
+          <a class="ib" href="/post?id=${p.id}" target="_blank" rel="noopener" aria-label="দেখুন" title="দেখুন">${ic('lucide:eye')}</a>
+          ${p.status !== 'approved' ? `<button class="ib ok" data-a="ok" data-id="${p.id}" aria-label="অনুমোদন" title="অনুমোদন">${ic('lucide:check')}</button>` : ''}
+          ${p.status !== 'rejected' ? `<button class="ib" data-a="no" data-id="${p.id}" aria-label="বাতিল" title="বাতিল">${ic('lucide:x')}</button>` : ''}
+          <button class="ib" data-a="del" data-id="${p.id}" aria-label="মুছুন" title="মুছুন">${ic('lucide:trash')}</button></div>` },
+    ], list, { selectable: true, id: p => p.id, minw: 1180, empty: 'কোনো পোস্ট পাওয়া যায়নি' });
   }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-bulk]'); if (!b) return;
+    const sel = T.posts.sel, ids = [...sel], act = b.dataset.bulk;
+    if (act === 'clear') { sel.clear(); return drawPosts(); }
+    if (act === 'ok') { savePosts(posts().map(p => sel.has(p.id) ? { ...p, status: 'approved', reason: '' } : p)); sel.clear(); toast(`${bn(ids.length)}টি পোস্ট অনুমোদিত হয়েছে`); render(); }
+    else if (act === 'del') { if (confirm(`${bn(ids.length)}টি পোস্ট স্থায়ীভাবে মুছবেন?`)) { savePosts(posts().filter(p => !sel.has(p.id))); sel.clear(); toast('পোস্টগুলো মুছে ফেলা হয়েছে'); render(); } }
+    else if (act === 'no') {
+      openModal(`<h3>${bn(ids.length)}টি পোস্ট বাতিলের কারণ</h3><div class="field"><textarea id="rs" style="min-height:96px" placeholder="যেমন: ছবি অস্পষ্ট, তথ্য অসম্পূর্ণ"></textarea></div>
+        <div class="mact"><button class="btn btn-line" data-close>ফিরে যান</button><button class="btn btn-green" id="rok">বাতিল করুন</button></div>`);
+      $('rok').onclick = () => { const r = $('rs').value.trim(); savePosts(posts().map(p => sel.has(p.id) ? { ...p, status: 'rejected', reason: r } : p)); sel.clear(); closeModal(); toast('পোস্টগুলো বাতিল করা হয়েছে'); render(); };
+    }
+  });
 
   // ---------- users ----------
   function renderUsers() {
     $('view').innerHTML = `
       <div class="tbar"><div class="sbox">${ic('lucide:search')}<input id="uq" type="search" placeholder="নাম বা মোবাইল নম্বর খুঁজুন" value="${esc(us.q)}"></div>
         <span class="grow"></span><button class="btn btn-amber" id="uadd">${ic('lucide:user-plus')} নতুন ইউজার</button></div>
-      <div class="ulist"><div class="urow hd"><span>ইউজার</span><span>ভূমিকা</span><span>পোস্ট</span><span>অবস্থা</span><span>অ্যাকশন</span></div><div id="ul"></div></div>`;
-    $('uq').oninput = e => { us.q = e.target.value.trim(); drawUsers(); };
+      <div id="ul"></div>`;
+    $('uq').oninput = e => { us.q = e.target.value.trim(); T.users.page = 1; drawUsers(); };
     $('uadd').onclick = () => userModal();
     drawUsers();
   }
   function drawUsers() {
-    const all = posts();
+    const all = posts(), cnt = x => all.filter(p => p.sellerId === x.id).length;
     const list = users().filter(x => !us.q || (x.name + ' ' + x.phone).includes(us.q));
-    $('ul').innerHTML = list.length ? list.map(x => {
-      const self = x.id === u.id, cnt = all.filter(p => p.sellerId === x.id).length;
-      const role = x.role === 'admin' ? '<span class="badge dark">অ্যাডমিন</span>' : '<span class="badge soft">ইউজার</span>';
-      const st = x.blocked ? '<span class="badge off">বন্ধ</span>' : '<span class="badge ok">সক্রিয়</span>';
-      return `<div class="urow"><div class="uwho">${avatar(x)}<div style="min-width:0"><b>${esc(x.name)}${self ? ' (আপনি)' : ''}</b><small>${bn(x.phone)}</small></div></div>
-        <span class="u-role">${role}</span><span class="u-posts">${bn(cnt)}টি</span><span class="u-st">${st}</span>
-        <div class="acts-row">
+    $('ul').innerHTML = table('users', [
+      { key: 'name', label: 'ইউজার', val: x => x.name, html: x => `<div class="dt-cell">${avatar(x)}<div><b class="dt-t">${esc(x.name)}${x.id === u.id ? ' (আপনি)' : ''}</b><small>ID ${x.id > 9999 ? '' : '#'}${String(x.id).slice(-4)}</small></div></div>` },
+      { key: 'phone', label: 'মোবাইল', val: x => x.phone, html: x => `<span class="dt-num">${bn(esc(x.phone))}</span>` },
+      { key: 'role', label: 'ভূমিকা', val: x => x.role, html: x => x.role === 'admin' ? '<span class="badge dark">অ্যাডমিন</span>' : '<span class="badge soft">ইউজার</span>' },
+      { key: 'posts', label: 'পোস্ট', val: cnt, cls: 'c-num', html: x => `${bn(cnt(x))}টি` },
+      { key: 'st', label: 'অবস্থা', val: x => !!x.blocked, html: x => x.blocked ? '<span class="badge off">বন্ধ</span>' : '<span class="badge ok">সক্রিয়</span>' },
+      { key: 'act', label: 'অ্যাকশন', cls: 'c-act', html: x => { const self = x.id === u.id; return `<div class="acts-row">
           <button class="ib" data-u="role" data-id="${x.id}" ${self ? 'disabled' : ''} aria-label="ভূমিকা বদলান" title="${x.role === 'admin' ? 'অ্যাডমিন সরান' : 'অ্যাডমিন বানান'}">${ic('lucide:user-cog')}</button>
           <button class="ib" data-u="block" data-id="${x.id}" ${self ? 'disabled' : ''} aria-label="বন্ধ বা চালু" title="${x.blocked ? 'চালু করুন' : 'বন্ধ করুন'}">${ic(x.blocked ? 'lucide:user-check' : 'lucide:user-x')}</button>
-          <button class="ib" data-u="del" data-id="${x.id}" ${self ? 'disabled' : ''} aria-label="মুছুন">${ic('lucide:trash')}</button></div>
-        <div class="u-meta acts-row">${role}${st}<span class="badge soft">${bn(cnt)}টি পোস্ট</span></div></div>`;
-    }).join('') : '<div class="empty-a" style="box-shadow:none">কোনো ইউজার পাওয়া যায়নি</div>';
+          <button class="ib" data-u="del" data-id="${x.id}" ${self ? 'disabled' : ''} aria-label="মুছুন" title="মুছুন">${ic('lucide:trash')}</button></div>`; } },
+    ], list, { minw: 820, empty: 'কোনো ইউজার পাওয়া যায়নি', emptyIcon: 'lucide:users' });
   }
   function userModal() {
     openModal(`<h3>নতুন ইউজার</h3>
@@ -209,40 +280,53 @@
   // ---------- categories ----------
   const ICONS_PICK = ['game-icons:chicken','game-icons:cow','game-icons:goat','game-icons:sheep','game-icons:buffalo-head','game-icons:duck','game-icons:goose','game-icons:swan','game-icons:dove','game-icons:rooster','fa6-solid:kiwi-bird','game-icons:ostrich','fa6-solid:fish','game-icons:shrimp','game-icons:rabbit','fa6-solid:horse','game-icons:camel','game-icons:deer','game-icons:pig','game-icons:bee','game-icons:turtle','lucide:wheat','lucide:paw-print'];
   function renderCats() {
+    $('view').innerHTML = `<div class="tbar"><span class="hint">ক্রম অনুযায়ী প্রথম 10টি হোম পেজের স্লাইডারে দেখা যায়।</span><span class="grow"></span>
+      <button class="btn btn-amber" data-c="add">${ic('lucide:plus')} নতুন ক্যাটাগরি</button></div><div id="cl"></div>`;
+    drawCats();
+  }
+  function drawCats() {
     const all = posts();
-    $('view').innerHTML = `<div class="tbar"><span class="hint">ক্রম অনুযায়ী প্রথম 10টি হোম পেজের স্লাইডারে দেখা যায়।</span></div>
-      <div class="ccards">${CATS.map((c, i) => {
-        const cnt = all.filter(p => p.cat === c.id).length, br = c.breeds || [];
-        return `<div class="ccard"><div class="ccard-h"><span class="cic">${catPic(c)}</span><div><b>${esc(c.name)}</b><small>${bn(cnt)}টি পোস্ট · ${bn(br.length)}টি জাত</small></div></div>
-          <div class="chips2">${br.slice(0, 6).map(b => `<span>${esc(b)}</span>`).join('')}${br.length > 6 ? `<span>+${bn(br.length - 6)}</span>` : ''}</div>
-          <div class="acts-row"><button class="ib" data-c="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="উপরে">${ic('lucide:arrow-up')}</button>
-            <button class="ib" data-c="down" data-i="${i}" ${i === CATS.length - 1 ? 'disabled' : ''} aria-label="নিচে">${ic('lucide:arrow-down')}</button>
-            <button class="ib" data-c="edit" data-i="${i}" aria-label="এডিট">${ic('lucide:pencil')}</button>
-            <button class="ib" data-c="del" data-i="${i}" aria-label="মুছুন">${ic('lucide:trash')}</button></div></div>`;
-      }).join('')}
-        <div class="ccard cadd" data-c="add">${ic('lucide:plus')}<span>নতুন ক্যাটাগরি</span></div></div>`;
+    $('cl').innerHTML = table('cats', [
+      { key: 'ord', label: 'ক্রম', cls: 'c-ord', html: c => { const i = CATS.indexOf(c); return `<div class="dt-ord"><b>${bn(i + 1)}</b><span><button class="ib sm" data-c="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="উপরে">${ic('lucide:arrow-up')}</button><button class="ib sm" data-c="down" data-i="${i}" ${i === CATS.length - 1 ? 'disabled' : ''} aria-label="নিচে">${ic('lucide:arrow-down')}</button></span></div>`; } },
+      { key: 'name', label: 'ক্যাটাগরি', html: c => `<div class="dt-cell"><span class="cic sm">${catPic(c)}</span><div><b class="dt-t">${esc(c.name)}</b><small>${esc(c.desc || 'কোনো বিবরণ নেই')}</small></div></div>` },
+      { key: 'breeds', label: 'জাত / প্রকার', html: c => { const br = c.breeds || []; return br.length ? `<div class="chips2">${br.slice(0, 5).map(b => `<span>${esc(b)}</span>`).join('')}${br.length > 5 ? `<span>+${bn(br.length - 5)}</span>` : ''}</div>` : '<small class="dt-mut">-</small>'; } },
+      { key: 'posts', label: 'পোস্ট', cls: 'c-num', html: c => `${bn(all.filter(p => p.cat === c.id).length)}টি` },
+      { key: 'act', label: 'অ্যাকশন', cls: 'c-act', html: c => { const i = CATS.indexOf(c); return `<div class="acts-row"><button class="ib" data-c="edit" data-i="${i}" aria-label="এডিট" title="এডিট">${ic('lucide:pencil')}</button><button class="ib" data-c="del" data-i="${i}" aria-label="মুছুন" title="মুছুন">${ic('lucide:trash')}</button></div>`; } },
+    ], CATS.slice(), { minw: 860, size: 10 });
   }
   function catModal(idx) {
-    const c = idx == null ? { name: '', icon: ICONS_PICK[0], breeds: [] } : CATS[idx];
-    let icon = c.icon, img = c.img || '';
+    const c = idx == null ? { name: '', desc: '', icon: 'lucide:paw-print', breeds: [] } : CATS[idx];
+    let img = c.img || '', tags = [...(c.breeds || [])];
+    const tagHtml = () => tags.map((t, i) => `<span class="tg">${esc(t)}<button type="button" data-rm="${i}" aria-label="সরান">${ic('lucide:x')}</button></span>`).join('');
     openModal(`<h3>${idx == null ? 'নতুন ক্যাটাগরি' : 'ক্যাটাগরি এডিট'}</h3>
-      <div class="field" id="cfn"><label>নাম</label><input id="cn" placeholder="ক্যাটাগরির নাম লিখুন" value="${esc(c.name)}"><span class="err">নাম লিখুন</span></div>
-      <div class="field"><label>আইকন</label><div class="icopick" id="icp">${ICONS_PICK.map(k => `<button type="button" data-k="${k}" class="${k === icon ? 'on' : ''}">${ic(k)}</button>`).join('')}</div></div>
-      <div class="field"><label>ক্যাটাগরির ছবি</label><div class="cimg"><span class="cic" id="cimgp">${img ? `<img class="cpic" src="${esc(img)}" alt="">` : ic(icon)}</span>
-        <label class="btn btn-line btn-sm" for="cimg">${ic('lucide:images')} ছবি বাছাই করুন</label><input type="file" id="cimg" accept="image/*" class="hide"></div><span class="hint">ছবি না দিলে উপরের আইকন ব্যবহার হবে।</span></div>
-      <div class="field"><label>জাত / প্রকার</label><textarea id="cb" style="min-height:130px" placeholder="প্রতি লাইনে একটি জাতের নাম লিখুন">${esc((c.breeds || []).join('\n'))}</textarea><span class="hint">প্রতি লাইনে বা কমা দিয়ে আলাদা করে লিখুন।</span></div>
+      <div class="field" id="cfi"><label>ছবি</label>
+        <div class="cimg"><span class="cic" id="cimgp">${img ? `<img class="cpic" src="${esc(img)}" alt="">` : ic('lucide:images')}</span>
+          <label class="btn btn-line btn-sm" for="cimg">${ic('lucide:images')} ছবি বাছাই করুন</label><input type="file" id="cimg" accept="image/*" class="hide"></div>
+        <span class="err">ক্যাটাগরির ছবি দিন</span></div>
+      <div class="field" id="cfn"><label>নাম</label><input id="cn" placeholder="ক্যাটাগরির নাম লিখুন" value="${esc(c.name)}" maxlength="40"><span class="err">নাম লিখুন</span></div>
+      <div class="field"><label>বিবরণ</label><textarea id="cd" style="min-height:84px" maxlength="200" placeholder="ক্যাটাগরির সংক্ষিপ্ত বিবরণ লিখুন">${esc(c.desc || '')}</textarea></div>
+      <div class="field"><label>জাত / প্রকার</label>
+        <div class="tagbox" id="tgb"><span id="tgs">${tagHtml()}</span><input id="tgi" placeholder="জাতের নাম লিখে Enter চাপুন"></div>
+        <span class="hint">প্রতিটি জাত লিখে Enter বা কমা দিন। ✕ চাপলে সরে যাবে।</span></div>
       <div class="mact"><button class="btn btn-line" data-close>বাতিল</button><button class="btn btn-green" id="csave">সেভ করুন</button></div>`);
-    $('icp').onclick = e => { const b = e.target.closest('[data-k]'); if (!b) return; icon = b.dataset.k; $('icp').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+    const addTag = v => { v = v.trim().replace(/,$/, '').trim(); if (v && !tags.includes(v)) { tags.push(v); $('tgs').innerHTML = tagHtml(); } $('tgi').value = ''; };
+    $('tgi').onkeydown = e => {
+      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag($('tgi').value); }
+      else if (e.key === 'Backspace' && !$('tgi').value && tags.length) { tags.pop(); $('tgs').innerHTML = tagHtml(); }
+    };
+    $('tgi').onblur = () => addTag($('tgi').value);
+    $('tgb').onclick = e => { const b = e.target.closest('[data-rm]'); if (b) { tags.splice(+b.dataset.rm, 1); $('tgs').innerHTML = tagHtml(); } else $('tgi').focus(); };
     $('cimg').onchange = async e => { const f = e.target.files[0]; if (!f) return; img = await KB.shrink(f); $('cimgp').innerHTML = `<img class="cpic" src="${img}" alt="">`; };
     $('csave').onclick = () => {
-      const name = $('cn').value.trim();
-      $('cfn').classList.remove('bad'); if (!name) { $('cfn').classList.add('bad'); return; }
-      const breeds = [...new Set($('cb').value.split(/[\n,]/).map(x => x.trim()).filter(Boolean))];
+      addTag($('tgi').value);
+      const name = $('cn').value.trim(), desc = $('cd').value.trim();
+      ['cfi', 'cfn'].forEach(i => $(i).classList.remove('bad'));
+      let ok = true; if (!name) { $('cfn').classList.add('bad'); ok = false; } if (!img) { $('cfi').classList.add('bad'); ok = false; } if (!ok) return;
       const list = CATS.map(x => ({ ...x }));
-      if (idx == null) list.push({ id: 'c' + Date.now().toString(36), name, icon, breeds, img });
+      if (idx == null) list.push({ id: 'c' + Date.now().toString(36), name, desc, icon: 'lucide:paw-print', breeds: tags, img });
       else {
-        const old = list[idx], same = JSON.stringify(old.breeds) === JSON.stringify(breeds);
-        list[idx] = { ...old, name, icon, breeds, img };
+        const old = list[idx], same = JSON.stringify(old.breeds) === JSON.stringify(tags);
+        list[idx] = { ...old, name, desc, breeds: tags, img };
         if (!same) delete list[idx].groups;
       }
       KB.saveCats(list); closeModal(); toast('ক্যাটাগরি সেভ হয়েছে'); render();
@@ -257,23 +341,26 @@
       <div class="tbar"><div class="sbox">${ic('lucide:search')}<input id="bsq" type="search" placeholder="ব্লগের শিরোনাম খুঁজুন" value="${esc(bq.q)}"></div>
         <span class="grow"></span><button class="btn btn-amber" id="badd">${ic('lucide:plus')} নতুন ব্লগ</button></div>
       <div id="blist"></div>`;
-    $('bsq').oninput = e => { bq.q = e.target.value.trim(); drawBlogs(); };
+    $('bsq').oninput = e => { bq.q = e.target.value.trim(); T.blogs.page = 1; drawBlogs(); };
     $('badd').onclick = () => blogModal();
     drawBlogs();
   }
   function drawBlogs() {
-    const list = KB.blogsRaw().filter(b => !bq.q || (b.title + ' ' + b.cat).includes(bq.q)).sort((a, b) => b.createdAt - a.createdAt);
-    $('blist').innerHTML = list.length ? list.map(b => `
-      <div class="prow"><img src="${esc(b.cover)}" alt="" loading="lazy">
-        <div style="min-width:0">${b.published === false ? `<span class="badge wait">${ic('lucide:eye-off')} খসড়া</span>` : `<span class="badge ok">${ic('lucide:circle-check')} প্রকাশিত</span>`}
-          <h4>${esc(b.title)}</h4>
-          <p><span>${ic('lucide:tags')} ${esc(b.cat)}</span><span>${ic('lucide:calendar')} ${KB.fmtDate(b.createdAt)}</span><span>${ic('lucide:clock')} ${bn(KB.readMin(b.body))} মিনিট</span></p></div>
-        <div class="acts-row">
-          <a class="ib" href="/blog?id=${b.id}" target="_blank" rel="noopener" aria-label="দেখুন">${ic('lucide:eye')}</a>
-          <button class="ib" data-b="edit" data-id="${b.id}" aria-label="এডিট">${ic('lucide:pencil')}</button>
+    const list = KB.blogsRaw().filter(b => !bq.q || (b.title + ' ' + b.cat).includes(bq.q));
+    const au = b => users().find(x => x.id === b.authorId);
+    $('blist').innerHTML = table('blogs', [
+      { key: 'title', label: 'ব্লগ', val: b => b.title, html: b => `<div class="dt-cell">${thumb(b.cover)}<div><b class="dt-t">${esc(b.title)}</b><small>${esc(b.excerpt).slice(0, 60)}...</small></div></div>` },
+      { key: 'cat', label: 'বিভাগ', val: b => b.cat, html: b => `<span class="badge soft">${esc(b.cat)}</span>` },
+      { key: 'author', label: 'লেখক', val: b => au(b)?.name || '', html: b => `<div class="dt-cell">${avatar(au(b), 'sm')}<b class="dt-t">${esc(au(b)?.name || '-')}</b></div>` },
+      { key: 'date', label: 'তারিখ', val: b => b.createdAt, html: b => `<span class="dt-time">${KB.fmtDate(b.createdAt)}</span>` },
+      { key: 'min', label: 'পড়ার সময়', val: b => KB.readMin(b.body), cls: 'c-num', html: b => `${bn(KB.readMin(b.body))} মিনিট` },
+      { key: 'st', label: 'অবস্থা', val: b => b.published !== false, html: b => b.published === false ? `<span class="badge wait">${ic('lucide:eye-off')} খসড়া</span>` : `<span class="badge ok">${ic('lucide:circle-check')} প্রকাশিত</span>` },
+      { key: 'act', label: 'অ্যাকশন', cls: 'c-act', html: b => `<div class="acts-row">
+          <a class="ib" href="/blog?id=${b.id}" target="_blank" rel="noopener" aria-label="দেখুন" title="দেখুন">${ic('lucide:eye')}</a>
+          <button class="ib" data-b="edit" data-id="${b.id}" aria-label="এডিট" title="এডিট">${ic('lucide:pencil')}</button>
           <button class="ib ${b.published === false ? 'ok' : ''}" data-b="pub" data-id="${b.id}" aria-label="প্রকাশ বা খসড়া" title="${b.published === false ? 'প্রকাশ করুন' : 'খসড়ায় নিন'}">${ic(b.published === false ? 'lucide:circle-check' : 'lucide:eye-off')}</button>
-          <button class="ib" data-b="del" data-id="${b.id}" aria-label="মুছুন">${ic('lucide:trash')}</button></div></div>`).join('')
-      : `<div class="empty-a"><i>${ic('lucide:book-open')}</i>কোনো ব্লগ পাওয়া যায়নি</div>`;
+          <button class="ib" data-b="del" data-id="${b.id}" aria-label="মুছুন" title="মুছুন">${ic('lucide:trash')}</button></div>` },
+    ], list, { minw: 980, empty: 'কোনো ব্লগ পাওয়া যায়নি', emptyIcon: 'lucide:book-open' });
   }
   function blogModal(id) {
     const old = id ? KB.blogsRaw().find(x => x.id === id) : null;

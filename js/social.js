@@ -61,7 +61,7 @@ const Social = (() => {
         <button class="soc-b ${my ? 'on' : ''}" data-soc="react" aria-label="প্রতিক্রিয়া">${label}</button>
         <div class="soc-pop" role="menu">${R.map(r => `<button data-soc="pick" data-r="${r.k}" aria-label="${r.n}" title="${r.n}">${rIcon(r.k)}<span>${r.n}</span></button>`).join('')}</div>
       </div>
-      <button class="soc-b" data-soc="cmt"><span class="rl">${ic('lucide:message-circle')}<em>মন্তব্য</em></span></button>
+      <button class="soc-b" data-soc="cmt"><span class="rl">${ic('lucide:message-circle')}<em>মন্তব্য <span class="cc">(${bn(cm.length)})</span></em></span></button>
       <button class="soc-b" data-soc="share"><span class="rl">${ic('lucide:share-2')}<em>শেয়ার</em></span></button>
       <button class="soc-b ${isSaved(p.id) ? 'on sv' : ''}" data-soc="save" aria-label="সংরক্ষণ"><span class="rl">${ic('lucide:bookmark')}<em class="hide-s">সেভ</em></span></button>
     </div>
