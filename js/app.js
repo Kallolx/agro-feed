@@ -154,6 +154,135 @@ const KB = (() => {
   const logout = () => { localStorage.removeItem('kb_session'); location.href = 'index.html'; };
   const requireLogin = () => { if (!me()) { location.href = 'login.html?next=' + encodeURIComponent(location.pathname.split('/').pop() + location.search); return false; } return true; };
 
+
+  // ডেমো: কয়েকটি পোস্টে একাধিক ছবি, যাতে কোলাজ দেখা যায়
+  if (!get('multiimg')) {
+    const W = n => `img/post/web/${n}.webp`;
+    const MULTI = { 101: ['cow', 'buffalo', 'sheeps', 'goat', 'chicken', 'fish'], 102: ['goat', 'sheeps', 'cow'], 103: ['chicken', 'ducks'], 104: ['cow', 'buffalo', 'goat', 'pigeons'] };
+    const list = get('posts', []);
+    list.forEach(x => { if (MULTI[x.id] && (x.images || []).length <= 1) x.images = MULTI[x.id].map(W); });
+    set('posts', list); set('multiimg', 1);
+  }
+
+  // ---------- ব্লগ ----------
+  const BLOG_CATS = ['পশু পালন', 'কুরবানি', 'খামার ব্যবস্থাপনা', 'মাছ চাষ', 'বাজার ও দাম', 'টিপস'];
+  const DAY = 86400e3;
+  const BLOG_SEED = [
+    { id: 201, title: 'কুরবানির পশু কেনার আগে যে 7টি বিষয় অবশ্যই দেখবেন', cat: 'কুরবানি', cover: 'img/post/web/cow.webp', daysAgo: 2,
+      excerpt: 'হাটে যাওয়ার আগে একটু প্রস্তুতি নিলেই ভালো পশু সঠিক দামে কেনা সহজ হয়। জেনে নিন দরকারি সাতটি বিষয়।',
+      body: `কুরবানির সময় পশুর বাজার সরগরম থাকে। তাড়াহুড়োয় কিনলে ঠকে যাওয়ার সম্ভাবনা বেশি, তাই আগে থেকেই কিছু বিষয় জেনে রাখা ভালো।
+
+## 1. পশুর বয়স ও দাঁত দেখুন
+কুরবানির জন্য গরু-মহিষের বয়স কমপক্ষে 2 বছর এবং ছাগল-ভেড়ার বয়স কমপক্ষে 1 বছর হতে হয়। দাঁত দেখে বয়স মোটামুটি বোঝা যায়, তাই বিক্রেতার কথার সঙ্গে নিজেও যাচাই করুন।
+
+## 2. সুস্থতার লক্ষণ
+পশুর চোখ পরিষ্কার, নাক ভেজা, চামড়া মসৃণ এবং চলাফেরা স্বাভাবিক কি না দেখুন। খোঁড়ানো, অতিরিক্ত লালা বা ঝিমানো ভাব থাকলে এড়িয়ে চলুন।
+
+## 3. ওজন ও দামের হিসাব
+চোখের আন্দাজে না কিনে সম্ভব হলে ওজন বা মাংসের পরিমাণ সম্পর্কে বিক্রেতার কাছে স্পষ্ট জানতে চান। খামারি বাজারে প্রতিটি পোস্টে গড় ওজন ও মোট ওজন আলাদা করে দেওয়া থাকে।
+
+## 4. সরাসরি খামারির সঙ্গে কথা বলুন
+মধ্যস্বত্বভোগী ছাড়া সরাসরি খামারির কাছ থেকে কিনলে দাম কম পড়ে এবং পশুর খাবার ও পরিচর্যা সম্পর্কে সঠিক তথ্য পাওয়া যায়।
+
+## 5. অগ্রিম টাকা নয়
+পশু নিজে দেখার আগে কাউকে অগ্রিম টাকা পাঠাবেন না। সরাসরি গিয়ে দেখে, দাম ঠিক করে তারপর লেনদেন করুন।
+
+- হরমোন বা ইনজেকশন দেওয়া হয়েছে কি না জিজ্ঞাসা করুন
+- টিকা দেওয়া আছে কি না জেনে নিন
+- পরিবহনের ব্যবস্থা আগেই ঠিক করে রাখুন
+
+সবশেষে মনে রাখুন, ভালো পশু চেনার সবচেয়ে বড় উপায় হলো নিজে দেখা এবং ধৈর্য ধরে দরদাম করা।` },
+    { id: 202, title: 'দেশি মুরগি পালনে সফল হওয়ার সহজ টিপস', cat: 'পশু পালন', cover: 'img/post/web/chicken.webp', daysAgo: 5,
+      excerpt: 'অল্প জায়গা আর কম খরচে দেশি মুরগি পালন করে ভালো আয় করা সম্ভব। শুরু করার আগে এই বিষয়গুলো জানা থাকলে ঝুঁকি কমে।',
+      body: `দেশি মুরগির চাহিদা সারা বছরই থাকে এবং বাজারে দামও ভালো পাওয়া যায়। সঠিক নিয়মে পালন করলে বাড়ির উঠানেই ছোট পরিসরে খামার গড়ে তোলা যায়।
+
+## জায়গা ও ঘর
+মুরগির ঘর শুকনো, আলো-বাতাস চলাচলের উপযোগী এবং শিয়াল-বিড়ালের হাত থেকে নিরাপদ হওয়া চাই। প্রতিটি মুরগির জন্য কমপক্ষে 2 বর্গফুট জায়গা রাখুন।
+
+## খাবার ও পানি
+সকালে ও বিকেলে নিয়মিত খাবার দিন। দানাদার খাবারের পাশাপাশি শাকসবজি ও কেঁচো জাতীয় প্রোটিন মুরগির বৃদ্ধি ভালো রাখে। পরিষ্কার পানি সবসময় হাতের কাছে রাখুন।
+
+## রোগ প্রতিরোধ
+রাণীক্ষেত, গামবোরো ও ফাউল পক্সের টিকা সময়মতো দিন। অসুস্থ মুরগিকে আলাদা করে ফেলুন, তাহলে সংক্রমণ ছড়ায় না।
+
+## বিক্রির সময়
+সাধারণত 5 থেকে 6 মাস বয়সে দেশি মুরগি বিক্রির উপযোগী হয়। খামারি বাজারে পোস্ট করে সরাসরি ক্রেতার সঙ্গে যোগাযোগ করলে ভালো দাম পাওয়া যায়।` },
+    { id: 203, title: 'ব্ল্যাক বেঙ্গল ছাগল পালনের শুরুর গাইড', cat: 'খামার ব্যবস্থাপনা', cover: 'img/post/web/goat.webp', daysAgo: 9,
+      excerpt: 'কম খরচে বেশি আয়ের জন্য ব্ল্যাক বেঙ্গল ছাগল দেশের সেরা পছন্দগুলোর একটি। জেনে নিন কীভাবে শুরু করবেন।',
+      body: `ব্ল্যাক বেঙ্গল ছাগল আকারে ছোট হলেও এর মাংস অত্যন্ত সুস্বাদু এবং বাজারে চাহিদা বেশি। বছরে দুইবার এবং প্রতিবারে 2 থেকে 3টি বাচ্চা দেওয়ার কারণে খামারিদের কাছে এটি জনপ্রিয়।
+
+## ঘর তৈরি
+মাটি থেকে কিছুটা উঁচুতে মাচা করে ঘর বানালে ছাগল শুকনো থাকে এবং রোগ কম হয়। ঘরে পর্যাপ্ত আলো-বাতাস থাকা জরুরি।
+
+## খাবার
+কাঁঠাল পাতা, ঘাস ও দানাদার মিশ্রণ ছাগলের প্রধান খাবার। প্রতিদিন তাজা পানি এবং সামান্য লবণ দিলে স্বাস্থ্য ভালো থাকে।
+
+## টিকা ও কৃমিনাশক
+পিপিআর রোগের টিকা এবং নিয়মিত কৃমিনাশক ওষুধ খাওয়ানো অত্যন্ত জরুরি। স্থানীয় প্রাণিসম্পদ অফিস থেকে পরামর্শ নিতে পারেন।
+
+## কখন বিক্রি করবেন
+কুরবানি বা বিয়ের মৌসুমে দাম বেশি পাওয়া যায়। ভালো ছবি ও সঠিক ওজনের তথ্যসহ পোস্ট দিলে ক্রেতা দ্রুত যোগাযোগ করেন।` },
+    { id: 204, title: 'পুকুরে মাছ চাষে বর্ষার যত্ন', cat: 'মাছ চাষ', cover: 'img/post/web/fish.webp', daysAgo: 14,
+      excerpt: 'বর্ষায় পানির মান দ্রুত বদলে যায়। পুকুরের মাছ সুস্থ রাখতে এই কয়েকটি কাজ নিয়মিত করুন।',
+      body: `বর্ষাকালে অতিরিক্ত বৃষ্টিতে পুকুরের পানির মান বদলে যায় এবং মাছ রোগে আক্রান্ত হওয়ার ঝুঁকি বাড়ে। একটু সতর্ক থাকলে বড় ক্ষতি এড়ানো যায়।
+
+## পানির মান পরীক্ষা
+সপ্তাহে অন্তত একবার পানির রং ও গন্ধ লক্ষ্য করুন। পানি ঘোলা বা দুর্গন্ধযুক্ত হলে চুন প্রয়োগ করুন।
+
+## পাড় ও বাঁধ মেরামত
+ভারী বৃষ্টিতে পুকুরের পাড় ভেঙে মাছ বেরিয়ে যেতে পারে। আগেই বাঁধ উঁচু ও মজবুত করে নিন।
+
+## খাবার কমিয়ে দিন
+মেঘলা দিনে মাছ কম খাবার খায়, তাই খাবারের পরিমাণ কিছুটা কমিয়ে দিন। অতিরিক্ত খাবার পানিতে পচে পরিবেশ নষ্ট করে।
+
+## বিক্রির প্রস্তুতি
+মাছ বাজারে তোলার আগে ওজন ও পরিমাণ ঠিক করে খামারি বাজারে পোস্ট দিন, এতে ক্রেতারা আগেই দাম জেনে যোগাযোগ করতে পারেন।` },
+    { id: 205, title: 'পশু বিক্রির পোস্টে ভালো ছবি তোলার 5টি কৌশল', cat: 'টিপস', cover: 'img/post/web/sheeps.webp', daysAgo: 20,
+      excerpt: 'ভালো ছবি থাকলে ক্রেতা বেশি আগ্রহ দেখান। মোবাইল দিয়েই কীভাবে আকর্ষণীয় ছবি তুলবেন, জেনে নিন।',
+      body: `একটি ভালো ছবি পোস্টের দর্শক অনেকগুণ বাড়িয়ে দিতে পারে। দামি ক্যামেরা ছাড়াই শুধু মোবাইল দিয়ে এই কৌশলগুলো কাজে লাগাতে পারেন।
+
+- সকাল বা বিকেলের নরম আলোতে ছবি তুলুন
+- পশুর সম্পূর্ণ শরীর দেখা যায় এমন পাশের ছবি দিন
+- পেছনে পরিষ্কার ও ঝামেলাহীন জায়গা বেছে নিন
+- সামনে, পাশে ও পেছন থেকে অন্তত তিনটি ছবি দিন
+- ক্যামেরার লেন্স পরিষ্কার রাখুন
+
+## পোস্টে কী লিখবেন
+জাত, বয়স, ওজন ও খাবারের ধরন স্পষ্ট লিখুন। শিরোনামে সংখ্যা না দিয়ে পরিমাণ আলাদা ঘরে দিন, এতে পোস্ট দেখতে পরিষ্কার লাগে।
+
+ভালো ছবি ও সঠিক তথ্য থাকলে ক্রেতার বিশ্বাস বাড়ে এবং দ্রুত বিক্রি হয়।` },
+  ];
+  const blogsRaw = () => get('blogs', []);
+  const blogs = () => blogsRaw().filter(b => b.published !== false).sort((a, b) => b.createdAt - a.createdAt);
+  const saveBlogs = l => set('blogs', l);
+  if (!get('blogseed')) {
+    saveBlogs(BLOG_SEED.map(s => ({ id: s.id, title: s.title, cat: s.cat, cover: s.cover, excerpt: s.excerpt, body: s.body, authorId: 1, published: true, createdAt: Date.now() - s.daysAgo * DAY })));
+    set('blogseed', 1);
+  }
+  const MONTHS = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+  const fmtDate = ts => { const d = new Date(ts); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; };
+  const readMin = t => Math.max(1, Math.round(String(t || '').split(/\s+/).length / 160));
+  // সাধারণ মার্কডাউন: "## শিরোনাম", "- তালিকা", ফাঁকা লাইনে নতুন অনুচ্ছেদ
+  const blogBody = text => String(text || '').split(/\n{2,}/).map(chunk => {
+    const lines = chunk.split('\n').filter(Boolean);
+    if (lines.every(l => l.startsWith('- '))) return `<ul>${lines.map(l => `<li>${esc(l.slice(2))}</li>`).join('')}</ul>`;
+    if (lines[0] && lines[0].startsWith('## ')) {
+      const rest = lines.slice(1).join('\n');
+      return `<h2>${esc(lines[0].slice(3))}</h2>` + (rest ? `<p>${esc(rest).replace(/\n/g, '<br>')}</p>` : '');
+    }
+    return `<p>${esc(lines.join('\n')).replace(/\n/g, '<br>')}</p>`;
+  }).join('');
+  const blogCard = b => {
+    const au = users().find(x => x.id === b.authorId);
+    return `<a class="bcard" href="blog.html?id=${b.id}">
+      <div class="bcard-img"><img src="${esc(b.cover)}" alt="" loading="lazy" decoding="async"><span class="bcard-tag">${esc(b.cat)}</span></div>
+      <div class="bcard-body">
+        <div class="bcard-meta"><span>${ic('lucide:calendar')} ${fmtDate(b.createdAt)}</span><span>${ic('lucide:clock')} ${bn(readMin(b.body))} মিনিট</span></div>
+        <h3>${esc(b.title)}</h3><p>${esc(b.excerpt)}</p>
+        <div class="bcard-foot"><span class="bcard-au">${avatar(au, 'sm')}<b>${esc(au ? au.name : 'খামারি বাজার')}</b></span><span class="bcard-more">আরও পড়ুন ${ic('lucide:arrow-right')}</span></div>
+      </div></a>`;
+  };
+
   // ---------- UI ----------
   const I = {
     search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
@@ -171,7 +300,7 @@ const KB = (() => {
     document.getElementById('nav').innerHTML = `
     <header class="nav"><div class="wrap nav-in">
       <a class="brand" href="index.html"><img src="logo.png" alt="খামারি বাজার" height="52"><b class="brand-name">খামারি বাজার</b></a>
-      <nav class="nav-links">${link('index.html', 'home', 'হোম')}${link('index.html#feed', 'browse', 'পশু দেখুন')}${link('sell.html', 'sell', 'বিক্রি করুন')}${u && u.role === 'admin' ? link('admin.html', 'admin', 'অ্যাডমিন') : ''}</nav>
+      <nav class="nav-links">${link('index.html', 'home', 'হোম')}${link('feed.html', 'browse', 'পশু দেখুন')}${link('blogs.html', 'blog', 'ব্লগ')}${link('sell.html', 'sell', 'বিক্রি করুন')}${u && u.role === 'admin' ? link('admin.html', 'admin', 'অ্যাডমিন') : ''}</nav>
       <form class="nav-search" id="navSearch">${I.search}<input type="search" placeholder="গরু, ছাগল, মুরগি খুঁজুন…" aria-label="খুঁজুন"></form>
       <div class="nav-actions">
         <a class="btn btn-amber btn-sm" href="sell.html">+ বিক্রি করুন</a>
@@ -190,11 +319,12 @@ const KB = (() => {
       <div class="dr-body">
         <a class="dr-sell" href="sell.html"><span>${ic('lucide:plus')}</span><div><b>বিক্রি করুন</b><small>বিনামূল্যে পোস্ট দিন</small></div><i>${ic('lucide:chevron-right')}</i></a>
         <h5>ক্যাটাগরি</h5>
-        <div class="dr-cats">${CATS.map(c => `<a href="index.html?cat=${c.id}#feed"><i>${catPic(c)}</i>${c.name}</a>`).join('')}</div>
+        <div class="dr-cats">${CATS.map(c => `<a href="feed.html?cat=${c.id}"><i>${catPic(c)}</i>${c.name}</a>`).join('')}</div>
         <h5>মেনু</h5>
         <nav class="dr-nav">
           <a href="index.html"><i>${ic('lucide:house')}</i>হোম<em>${ic('lucide:chevron-right')}</em></a>
-          <a href="index.html#feed"><i>${ic('game-icons:cow')}</i>সব পশু দেখুন<em>${ic('lucide:chevron-right')}</em></a>
+          <a href="feed.html"><i>${ic('game-icons:cow')}</i>সব পশু দেখুন<em>${ic('lucide:chevron-right')}</em></a>
+          <a href="blogs.html"><i>${ic('lucide:book-open')}</i>ব্লগ<em>${ic('lucide:chevron-right')}</em></a>
           ${u ? `<a href="my.html"><i>${ic('lucide:clipboard-list')}</i>আমার পোস্ট<em>${ic('lucide:chevron-right')}</em></a>${u.role === 'admin' ? `<a href="admin.html"><i>${ic('lucide:shield-check')}</i>অ্যাডমিন প্যানেল<em>${ic('lucide:chevron-right')}</em></a>` : ''}` : ''}
         </nav>
       </div>
@@ -203,9 +333,9 @@ const KB = (() => {
     </aside></div>
     <nav class="tabbar">
       <a href="index.html" class="${active === 'home' ? 'on' : ''}">${I.home}হোম</a>
-      <a href="index.html#cats" class="${active === 'browse' ? 'on' : ''}">${I.grid}ক্যাটাগরি</a>
+      <a href="feed.html" class="${active === 'browse' ? 'on' : ''}">${I.grid}ফিড</a>
       <a href="sell.html" class="plus" aria-label="বিক্রি করুন">${I.plus}</a>
-      <a href="index.html?s=1">${I.search}খুঁজুন</a>
+      <a href="feed.html?s=1">${I.search}খুঁজুন</a>
       <a href="${u ? 'my.html' : 'login.html'}" class="${active === 'my' ? 'on' : ''}">${I.user}${u ? 'আমার' : 'লগইন'}</a>
     </nav>`;
     const $ = id => document.getElementById(id);
@@ -231,7 +361,14 @@ const KB = (() => {
     const u = me(), L = (href, t) => `<a href="${href}">${ic('lucide:chevron-right')}<span>${t}</span></a>`;
     const trust = [['lucide:badge-check', 'যাচাইকৃত বিক্রেতা', 'অ্যাডমিন রিভিউ করা পোস্ট'], ['lucide:phone', 'সরাসরি যোগাযোগ', 'মধ্যস্বত্বভোগী ছাড়াই'], ['lucide:tags', 'বিনামূল্যে পোস্ট', 'কোনো কমিশন নেই'], ['lucide:map-pin', 'সারা বাংলাদেশে', '64 জেলা থেকে পশু']];
     const dist = ['ঢাকা', 'চট্টগ্রাম', 'রাজশাহী', 'খুলনা', 'সিলেট', 'বরিশাল', 'রংপুর', 'ময়মনসিংহ'];
-    el.innerHTML = `
+    const bl = document.body.hasAttribute('data-noblog') ? [] : blogs().slice(0, 3);
+    const blogSec = bl.length ? `
+    <section class="fblogs"><div class="wrap">
+      <div class="fb-head"><div><span class="fb-k">${ic('lucide:book-open')} আমাদের ব্লগ</span><h2>খামার ও পশু পালনের কাজের টিপস</h2></div>
+        <a class="btn btn-green" href="blogs.html">সব ব্লগ দেখুন ${ic('lucide:arrow-right')}</a></div>
+      <div class="fb-grid">${bl.map(blogCard).join('')}</div>
+    </div></section>` : '';
+    el.innerHTML = blogSec + `
     <footer class="ft">
       <div class="ft-trust"><div class="wrap ft-trust-in">${trust.map(([i, t, s]) => `<div><span>${ic(i)}</span><div><b>${t}</b><small>${s}</small></div></div>`).join('')}</div></div>
       <div class="wrap">
@@ -243,11 +380,11 @@ const KB = (() => {
             <a class="ft-sell" href="sell.html">${ic('lucide:plus')} পশু বিক্রি করুন</a>
           </div>
           <div class="ft-col"><h4>দ্রুত লিংক</h4>
-            ${L('index.html', 'হোম')}${L('index.html#feed', 'সব পশু দেখুন')}${L('sell.html', 'বিক্রি করুন')}${u ? L('my.html', 'আমার পোস্ট') : L('login.html', 'লগইন / রেজিস্ট্রেশন')}${u && u.role === 'admin' ? L('admin.html', 'অ্যাডমিন প্যানেল') : ''}</div>
+            ${L('index.html', 'হোম')}${L('feed.html', 'সব পশু দেখুন')}${L('sell.html', 'বিক্রি করুন')}${L('blogs.html', 'ব্লগ')}${u ? L('my.html', 'আমার পোস্ট') : L('login.html', 'লগইন / রেজিস্ট্রেশন')}${u && u.role === 'admin' ? L('admin.html', 'অ্যাডমিন প্যানেল') : ''}</div>
           <div class="ft-col"><h4>ক্যাটাগরি</h4>
-            ${CATS.slice(0, 7).map(c => L(`index.html?cat=${c.id}#feed`, c.name)).join('')}${L('index.html#cats', 'সব ক্যাটাগরি')}</div>
+            ${CATS.slice(0, 7).map(c => L(`feed.html?cat=${c.id}`, c.name)).join('')}${L('feed.html', 'সব ক্যাটাগরি')}</div>
           <div class="ft-col"><h4>জনপ্রিয় জেলা</h4>
-            ${dist.map(d => L(`index.html?q=${encodeURIComponent(d)}#feed`, d)).join('')}</div>
+            ${dist.map(d => L(`feed.html?q=${encodeURIComponent(d)}`, d)).join('')}</div>
           <div class="ft-col"><h4>সহায়তা</h4>
             ${L('index.html#feed', 'কীভাবে কাজ করে')}${L('index.html#feed', 'নিরাপদ কেনাকাটা')}${L('#', 'আমাদের সম্পর্কে')}${L('#', 'যোগাযোগ')}${L('#', 'গোপনীয়তা নীতি')}${L('#', 'শর্তাবলী')}</div>
         </div>
@@ -271,12 +408,12 @@ const KB = (() => {
   }
 
   // ছবি ছোট করে (স্টোরেজ বাঁচাতে)
-  const shrink = file => new Promise(res => {
+  const shrink = (file, max = 800) => new Promise(res => {
     const r = new FileReader();
     r.onload = () => {
       const im = new Image();
       im.onload = () => {
-        const s = Math.min(1, 800 / Math.max(im.width, im.height));
+        const s = Math.min(1, max / Math.max(im.width, im.height));
         const c = document.createElement('canvas'); c.width = im.width * s; c.height = im.height * s;
         c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
         res(c.toDataURL('image/jpeg', .72));
@@ -368,5 +505,5 @@ const KB = (() => {
   document.addEventListener('DOMContentLoaded', () => enhanceSelects());
 
 
-  return { catPic, avatar, saveCats, ic, hydrate, enhanceSelects, CATS, DISTRICTS, catOf, bn, money, esc, ago, ph, get, set, users, posts, savePosts, me, loginUser, register, logout, requireLogin, mountNav, mountFooter, toast, shrink, I };
+  return { BLOG_CATS, blogs, blogsRaw, saveBlogs, fmtDate, readMin, blogBody, blogCard, catPic, avatar, saveCats, ic, hydrate, enhanceSelects, CATS, DISTRICTS, catOf, bn, money, esc, ago, ph, get, set, users, posts, savePosts, me, loginUser, register, logout, requireLogin, mountNav, mountFooter, toast, shrink, I };
 })();

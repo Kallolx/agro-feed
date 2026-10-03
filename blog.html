@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ব্লগ | খামারি বাজার</title>
+<meta name="theme-color" content="#12291e">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610040432">
+<link rel="stylesheet" href="css/detail.css?v=202610040432">
+<link rel="stylesheet" href="css/blog.css?v=202610040432">
+</head>
+<body data-noblog>
+<div class="rp" id="rp" aria-hidden="true"></div>
+<div id="nav"></div>
+<script src="js/icons.js?v=202610040432"></script>
+<script src="js/app.js?v=202610040432"></script>
+<script>KB.mountNav('blog')</script>
+<main class="wrap dwrap" id="root"></main>
+<div id="footer"></div>
+<script>
+(() => {
+  const { ic, blogs, blogsRaw, blogCard, blogBody, fmtDate, readMin, esc, bn, users, avatar, me, toast } = KB;
+  const id = +new URLSearchParams(location.search).get('id');
+  const root = document.getElementById('root');
+  const u = me();
+  const b = blogsRaw().find(x => x.id === id);
+  if (!b || (b.published === false && !(u && u.role === 'admin'))) {
+    root.innerHTML = `<div class="empty card"><i>${ic('lucide:book-open')}</i><h3>ব্লগটি পাওয়া যায়নি</h3><a class="btn btn-green" href="blogs.html" style="margin-top:12px">সব ব্লগ দেখুন</a></div>`;
+    return;
+  }
+  document.title = b.title + ' | খামারি বাজার';
+  const au = users().find(x => x.id === b.authorId);
+  const auName = au ? au.name : 'খামারি বাজার';
+  const url = location.href, q = encodeURIComponent;
+  const all = blogs();
+  const idx = all.findIndex(x => x.id === b.id);
+  const newer = idx > 0 ? all[idx - 1] : null, older = idx >= 0 && idx < all.length - 1 ? all[idx + 1] : null;
+  const rel = all.filter(x => x.id !== b.id).sort((x, y) => (y.cat === b.cat) - (x.cat === b.cat) || y.createdAt - x.createdAt).slice(0, 3);
+  const latest = all.filter(x => x.id !== b.id).slice(0, 4);
+
+  root.innerHTML = `
+  <nav class="bc bc-mid" aria-label="নেভিগেশন">
+    <a href="index.html">${ic('lucide:house')}<span class="t-home">হোম</span></a><span class="bc-s">${ic('lucide:chevron-right')}</span>
+    <a href="blogs.html">${ic('lucide:book-open')}<span>ব্লগ</span></a><span class="bc-s">${ic('lucide:chevron-right')}</span>
+    <b class="bc-cur" title="${esc(b.title)}">${esc(b.title)}</b>
+  </nav>
+
+  <header class="bh">
+    <a class="bpost-cat" href="blogs.html?cat=${q(b.cat)}">${esc(b.cat)}</a>
+    <h1>${esc(b.title)}</h1>
+    <p class="bh-lead">${esc(b.excerpt)}</p>
+    <div class="bh-meta">
+      <span class="bh-au">${avatar(au)}<span><b>${esc(auName)}</b><small>লেখক</small></span></span>
+      <span class="bh-i">${ic('lucide:calendar')} ${fmtDate(b.createdAt)}</span>
+      <span class="bh-i">${ic('lucide:clock')} ${bn(readMin(b.body))} মিনিটের পড়া</span>
+      ${b.published === false ? `<span class="badge wait">${ic('lucide:eye-off')} খসড়া</span>` : ''}
+    </div>
+  </header>
+
+  <figure class="bcov"><img src="${esc(b.cover)}" alt="${esc(b.title)}" fetchpriority="high"></figure>
+
+  <div class="blay">
+    <aside class="brail" aria-label="শেয়ার">
+      <span class="brail-t">শেয়ার</span>
+      <a href="https://wa.me/?text=${q(b.title + ' ' + url)}" target="_blank" rel="noopener" aria-label="হোয়াটসঅ্যাপে শেয়ার" title="হোয়াটসঅ্যাপ">${ic('fa6-brands:whatsapp')}</a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=${q(url)}" target="_blank" rel="noopener" aria-label="ফেসবুকে শেয়ার" title="ফেসবুক">${ic('fa6-brands:facebook')}</a>
+      <a href="https://t.me/share/url?url=${q(url)}&text=${q(b.title)}" target="_blank" rel="noopener" aria-label="টেলিগ্রামে শেয়ার" title="টেলিগ্রাম">${ic('fa6-brands:telegram')}</a>
+      <button id="cp" aria-label="লিংক কপি" title="লিংক কপি">${ic('lucide:link')}</button>
+    </aside>
+
+    <article class="bart">
+      <div class="bpost-body" id="bbody">${blogBody(b.body)}</div>
+      <div class="bauthor">${avatar(au, 'big')}<div><small>লেখক</small><b>${esc(auName)}</b><p>পশু পালন, খামার ব্যবস্থাপনা ও বাজার নিয়ে অভিজ্ঞতা এবং কাজের পরামর্শ শেয়ার করেন।</p></div></div>
+      ${(newer || older) ? `<nav class="bpn" aria-label="অন্য ব্লগ">
+        ${older ? `<a class="bpn-a" href="blog.html?id=${older.id}"><small>${ic('lucide:chevron-left')} আগের ব্লগ</small><b>${esc(older.title)}</b></a>` : '<span></span>'}
+        ${newer ? `<a class="bpn-a bpn-r" href="blog.html?id=${newer.id}"><small>পরের ব্লগ ${ic('lucide:chevron-right')}</small><b>${esc(newer.title)}</b></a>` : '<span></span>'}
+      </nav>` : ''}
+    </article>
+
+    <aside class="bside">
+      <div class="bside-c btoc" id="btoc"><h3>${ic('lucide:list-checks')} এই লেখায় যা আছে</h3><ol id="btocl"></ol></div>
+      ${latest.length ? `<div class="bside-c"><h3>${ic('lucide:newspaper')} সাম্প্রতিক ব্লগ</h3>${latest.map(x => `
+        <a class="bmini" href="blog.html?id=${x.id}"><img src="${esc(x.cover)}" alt="" loading="lazy"><span><b>${esc(x.title)}</b><small>${fmtDate(x.createdAt)}</small></span></a>`).join('')}</div>` : ''}
+      <div class="bside-c bcta"><h3>আপনার পশু বিক্রি করবেন?</h3><p>বিনামূল্যে পোস্ট করুন, সরাসরি ক্রেতার সঙ্গে যোগাযোগ হবে।</p><a class="btn btn-amber btn-block" href="sell.html">${ic('lucide:plus')} বিক্রি করুন</a></div>
+    </aside>
+  </div>
+
+  ${rel.length ? `<section class="dsim"><h2>${ic('lucide:book-open')} আরও পড়ুন</h2><div class="bl-grid">${rel.map(blogCard).join('')}</div></section>` : ''}`;
+
+  // ---------- table of contents ----------
+  const heads = [...document.querySelectorAll('#bbody h2')];
+  if (!heads.length) document.getElementById('btoc').remove();
+  else {
+    heads.forEach((h, i) => { h.id = 'h' + (i + 1); });
+    document.getElementById('btocl').innerHTML = heads.map((h, i) => `<li><a href="#${h.id}" data-h="${h.id}"><i>${bn(i + 1)}</i><span>${esc(h.textContent)}</span></a></li>`).join('');
+  }
+
+  // ---------- reading progress + scroll spy ----------
+  const rp = document.getElementById('rp'), body = document.getElementById('bbody');
+  let tick = false;
+  const upd = () => {
+    tick = false;
+    const r = body.getBoundingClientRect(), total = r.height - innerHeight * 0.4;
+    rp.style.width = Math.max(0, Math.min(1, (innerHeight * 0.4 - r.top) / Math.max(total, 1))) * 100 + '%';
+    let cur = null; heads.forEach(h => { if (h.getBoundingClientRect().top < innerHeight * 0.35) cur = h.id; });
+    document.querySelectorAll('#btocl a').forEach(a => a.classList.toggle('on', a.dataset.h === cur));
+  };
+  addEventListener('scroll', () => { if (!tick) { tick = true; requestAnimationFrame(upd); } }, { passive: true });
+  addEventListener('resize', upd); upd();
+
+  document.getElementById('cp').onclick = async () => { try { await navigator.clipboard.writeText(url); } catch {} toast('লিংক কপি হয়েছে'); };
+})();
+</script>
+<script>KB.mountFooter()</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ব্লগ | খামারি বাজার</title>
+<meta name="description" content="পশু পালন, কুরবানি, খামার ব্যবস্থাপনা ও মাছ চাষের কাজের টিপস ও পরামর্শ।">
+<meta name="theme-color" content="#12291e">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=202610040432">
+<link rel="stylesheet" href="css/detail.css?v=202610040432">
+<link rel="stylesheet" href="css/blog.css?v=202610040432">
+</head>
+<body data-noblog>
+<div id="nav"></div>
+<script src="js/icons.js?v=202610040432"></script>
+<script src="js/app.js?v=202610040432"></script>
+<script>KB.mountNav('blog')</script>
+
+<header class="bl-hero">
+  <div class="bl-hero-bg" aria-hidden="true"><div></div></div>
+  <div class="wrap bl-hero-in">
+    <h1 class="hero-title"><img src="img/blog-title.webp" width="900" height="434" alt="খামারি ব্লগ" fetchpriority="high" decoding="async"></h1>
+    <form class="hero-search bl-search" id="blSearch" role="search">
+      <label class="f"><span id="sic"></span><input id="q" type="search" placeholder="ব্লগ খুঁজুন" aria-label="ব্লগ খুঁজুন"></label>
+      <button class="btn btn-amber" type="submit">খুঁজুন</button>
+    </form>
+    <p class="lead">পশু পালন, কুরবানি, খামার ব্যবস্থাপনা ও মাছ চাষের কাজের টিপস, সরাসরি অভিজ্ঞদের কাছ থেকে।</p>
+  </div>
+</header>
+
+<main class="wrap bl-wrap">
+  <div class="bl-bar">
+    <div class="bl-chips" id="chips"></div>
+  </div>
+  <div id="feat"></div>
+  <div class="bl-grid" id="grid"></div>
+  <div class="bl-more"><button class="btn btn-green hide" id="more">আরও দেখুন</button></div>
+</main>
+
+<div id="footer"></div>
+<script>
+(() => {
+  const { ic, blogs, blogCard, BLOG_CATS, fmtDate, readMin, esc, bn, users, avatar } = KB;
+  const $ = id => document.getElementById(id);
+  $('sic').innerHTML = ic('lucide:search');
+  const S = { cat: new URLSearchParams(location.search).get('cat') || '', q: '', shown: 9 };
+  const all = blogs(), cats = ['', ...BLOG_CATS.filter(c => all.some(b => b.cat === c)), ...[...new Set(all.map(b => b.cat))].filter(c => !BLOG_CATS.includes(c))];
+
+  function chips() {
+    $('chips').innerHTML = cats.map(c => `<button data-c="${esc(c)}" class="${c === S.cat ? 'on' : ''}">${c ? esc(c) : 'সব'}</button>`).join('');
+  }
+  function featured(b) {
+    const au = users().find(x => x.id === b.authorId);
+    return `<a class="bfeat" href="blog.html?id=${b.id}">
+      <div class="bfeat-img"><img src="${esc(b.cover)}" alt="" decoding="async"><span class="bcard-tag">${esc(b.cat)}</span></div>
+      <div class="bfeat-body"><span class="bfeat-k">সর্বশেষ ব্লগ</span><h2>${esc(b.title)}</h2><p>${esc(b.excerpt)}</p>
+        <div class="bcard-meta"><span>${ic('lucide:calendar')} ${fmtDate(b.createdAt)}</span><span>${ic('lucide:clock')} ${bn(readMin(b.body))} মিনিট</span></div>
+        <div class="bfeat-foot"><span class="bcard-au">${avatar(au, 'sm')}<b>${esc(au ? au.name : 'খামারি বাজার')}</b></span><span class="btn btn-amber btn-sm">পড়ুন ${ic('lucide:arrow-right')}</span></div></div></a>`;
+  }
+  function render() {
+    chips();
+    const list = all.filter(b => (!S.cat || b.cat === S.cat) && (!S.q || [b.title, b.excerpt, b.cat].join(' ').includes(S.q)));
+    const showFeat = !S.q && list.length > 3;
+    $('feat').innerHTML = showFeat ? featured(list[0]) : '';
+    const rest = showFeat ? list.slice(1) : list;
+    $('grid').innerHTML = rest.length ? rest.slice(0, S.shown).map(blogCard).join('')
+      : `<div class="empty-a" style="grid-column:1/-1"><i>${ic('lucide:search-x')}</i>কোনো ব্লগ পাওয়া যায়নি</div>`;
+    $('more').classList.toggle('hide', rest.length <= S.shown);
+  }
+  $('chips').onclick = e => { const b = e.target.closest('[data-c]'); if (b) { S.cat = b.dataset.c; S.shown = 9; render(); } };
+  $('q').oninput = e => { S.q = e.target.value.trim(); S.shown = 9; render(); };
+  $('more').onclick = () => { S.shown += 9; render(); };
+  $('blSearch').onsubmit = e => { e.preventDefault(); $('grid').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  // হিরো ছবির প্যারালাক্স (ডেস্কটপ)
+  (() => {
+    const layer = document.querySelector('.bl-hero-bg > div'), hero = document.querySelector('.bl-hero');
+    if (!layer || !matchMedia('(min-width:861px)').matches || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    let tick = false;
+    const upd = () => { tick = false; const hh = hero.offsetHeight; if (scrollY > hh * 2) return; layer.style.transform = `translate3d(0,${Math.min(scrollY * 0.28, hh * 0.13).toFixed(1)}px,0)`; };
+    addEventListener('scroll', () => { if (!tick) { tick = true; requestAnimationFrame(upd); } }, { passive: true });
+    addEventListener('resize', upd); upd();
+  })();
+  render();
+})();
+</script>
+<script>KB.mountFooter()</script>
+</body>
+</html>

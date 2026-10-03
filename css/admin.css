@@ -160,3 +160,11 @@ body.adm{padding-bottom:0}
 .adm-body{margin-left:auto;margin-right:auto}
 .adm-top{padding-left:max(28px,calc((100% - 1240px)/2 + 28px));padding-right:max(28px,calc((100% - 1240px)/2 + 28px))}
 @media(max-width:860px){.adm-top{padding-left:16px;padding-right:16px}}
+
+/* blog editor */
+.bcover{display:flex;align-items:center;gap:14px}
+.bcover-p{width:132px;height:84px;border-radius:12px;background:var(--bg);border:1.5px dashed var(--line);display:grid;place-items:center;overflow:hidden;font-size:28px;color:var(--green-3);flex:0 0 auto}
+.bcover-p img{width:100%;height:100%;object-fit:cover}
+.bpub{display:flex;align-items:center;gap:10px;font-weight:600;margin:4px 0 14px;cursor:pointer}
+.bpub input{width:20px;height:20px;accent-color:var(--green)}
+.modal .box.wide textarea{width:100%;line-height:1.7}

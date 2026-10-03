@@ -10,14 +10,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&text=0123456789.,%25%2B:&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/style.css?v=202610040432">
+<link rel="stylesheet" href="css/admin.css?v=202610040432">
 </head>
 <body class="adm">
 <div id="app"></div>
 <div class="modal" id="modal"><div class="box wide" id="mbox"></div></div>
-<script src="js/icons.js"></script>
-<script src="js/app.js"></script>
+<script src="js/icons.js?v=202610040432"></script>
+<script src="js/app.js?v=202610040432"></script>
 <script>
 (() => {
   const { CATS, catOf, ic, esc, bn, money, ago, ph, posts, savePosts, users, me, toast, avatar, catPic } = KB;
@@ -32,7 +32,7 @@
   }
 
   const saveUsers = l => KB.set('users', l);
-  const TITLES = { dash: 'ড্যাশবোর্ড', posts: 'পোস্ট রিভিউ', users: 'ইউজার ম্যানেজমেন্ট', cats: 'ক্যাটাগরি' };
+  const TITLES = { dash: 'ড্যাশবোর্ড', posts: 'পোস্ট রিভিউ', users: 'ইউজার ম্যানেজমেন্ট', cats: 'ক্যাটাগরি', blogs: 'ব্লগ' };
   let view = TITLES[location.hash.slice(1)] ? location.hash.slice(1) : 'dash';
   const ps = { tab: 'pending', q: '', cat: '' };
   const us = { q: '' };
@@ -61,7 +61,7 @@
 
   function renderNav() {
     const pend = posts().filter(p => p.status === 'pending').length;
-    const items = [['dash', 'lucide:layout-dashboard'], ['posts', 'lucide:newspaper'], ['users', 'lucide:users'], ['cats', 'lucide:tags']];
+    const items = [['dash', 'lucide:layout-dashboard'], ['posts', 'lucide:newspaper'], ['users', 'lucide:users'], ['cats', 'lucide:tags'], ['blogs', 'lucide:book-open']];
     $('anav').innerHTML = '<h6>মেনু</h6>' + items.map(([k, i]) =>
       `<button data-v="${k}" class="${k === view ? 'on' : ''}">${ic(i)} ${TITLES[k]}${k === 'posts' && pend ? `<span class="cnt">${bn(pend)}</span>` : ''}</button>`).join('');
   }
@@ -70,7 +70,7 @@
 
   function render() {
     renderNav(); $('atitle').textContent = TITLES[view];
-    ({ dash: renderDash, posts: renderPosts, users: renderUsers, cats: renderCats })[view]();
+    ({ dash: renderDash, posts: renderPosts, users: renderUsers, cats: renderCats, blogs: renderBlogs })[view]();
     KB.enhanceSelects($('view'));
   }
 
@@ -248,6 +248,74 @@
       KB.saveCats(list); closeModal(); toast('ক্যাটাগরি সেভ হয়েছে'); render();
     };
   }
+
+
+  // ---------- blogs ----------
+  const bq = { q: '' };
+  function renderBlogs() {
+    $('view').innerHTML = `
+      <div class="tbar"><div class="sbox">${ic('lucide:search')}<input id="bsq" type="search" placeholder="ব্লগের শিরোনাম খুঁজুন" value="${esc(bq.q)}"></div>
+        <span class="grow"></span><button class="btn btn-amber" id="badd">${ic('lucide:plus')} নতুন ব্লগ</button></div>
+      <div id="blist"></div>`;
+    $('bsq').oninput = e => { bq.q = e.target.value.trim(); drawBlogs(); };
+    $('badd').onclick = () => blogModal();
+    drawBlogs();
+  }
+  function drawBlogs() {
+    const list = KB.blogsRaw().filter(b => !bq.q || (b.title + ' ' + b.cat).includes(bq.q)).sort((a, b) => b.createdAt - a.createdAt);
+    $('blist').innerHTML = list.length ? list.map(b => `
+      <div class="prow"><img src="${esc(b.cover)}" alt="" loading="lazy">
+        <div style="min-width:0">${b.published === false ? `<span class="badge wait">${ic('lucide:eye-off')} খসড়া</span>` : `<span class="badge ok">${ic('lucide:circle-check')} প্রকাশিত</span>`}
+          <h4>${esc(b.title)}</h4>
+          <p><span>${ic('lucide:tags')} ${esc(b.cat)}</span><span>${ic('lucide:calendar')} ${KB.fmtDate(b.createdAt)}</span><span>${ic('lucide:clock')} ${bn(KB.readMin(b.body))} মিনিট</span></p></div>
+        <div class="acts-row">
+          <a class="ib" href="blog.html?id=${b.id}" target="_blank" rel="noopener" aria-label="দেখুন">${ic('lucide:eye')}</a>
+          <button class="ib" data-b="edit" data-id="${b.id}" aria-label="এডিট">${ic('lucide:pencil')}</button>
+          <button class="ib ${b.published === false ? 'ok' : ''}" data-b="pub" data-id="${b.id}" aria-label="প্রকাশ বা খসড়া" title="${b.published === false ? 'প্রকাশ করুন' : 'খসড়ায় নিন'}">${ic(b.published === false ? 'lucide:circle-check' : 'lucide:eye-off')}</button>
+          <button class="ib" data-b="del" data-id="${b.id}" aria-label="মুছুন">${ic('lucide:trash')}</button></div></div>`).join('')
+      : `<div class="empty-a"><i>${ic('lucide:book-open')}</i>কোনো ব্লগ পাওয়া যায়নি</div>`;
+  }
+  function blogModal(id) {
+    const old = id ? KB.blogsRaw().find(x => x.id === id) : null;
+    const b = old || { title: '', cat: KB.BLOG_CATS[0], cover: '', excerpt: '', body: '', published: true };
+    let cover = b.cover;
+    const cats = [...new Set([...KB.BLOG_CATS, b.cat])];
+    openModal(`<h3>${old ? 'ব্লগ এডিট' : 'নতুন ব্লগ'}</h3>
+      <div class="field" id="bft"><label>শিরোনাম</label><input id="bt" placeholder="ব্লগের শিরোনাম লিখুন" value="${esc(b.title)}" maxlength="140"><span class="err">শিরোনাম লিখুন</span></div>
+      <div class="field"><label>বিভাগ</label><select id="bc" aria-label="বিভাগ">${cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select></div>
+      <div class="field" id="bfc"><label>কভার ছবি</label>
+        <div class="bcover"><div class="bcover-p" id="bcp">${cover ? `<img src="${esc(cover)}" alt="">` : ic('lucide:images')}</div>
+          <label class="btn btn-line btn-sm" for="bci">${ic('lucide:images')} ছবি বাছাই করুন</label><input type="file" id="bci" accept="image/*" class="hide"></div>
+        <span class="err">কভার ছবি দিন</span></div>
+      <div class="field" id="bfe"><label>সংক্ষিপ্ত বিবরণ</label><textarea id="be" style="min-height:84px" maxlength="220" placeholder="কার্ডে দেখানোর জন্য ১-২ লাইনের সারাংশ">${esc(b.excerpt)}</textarea><span class="err">সংক্ষিপ্ত বিবরণ লিখুন</span></div>
+      <div class="field" id="bfb"><label>ব্লগের লেখা</label><textarea id="bb" style="min-height:220px" placeholder="প্রতিটি অনুচ্ছেদের মাঝে একটি ফাঁকা লাইন দিন">${esc(b.body)}</textarea>
+        <span class="hint">সাজানোর নিয়ম: <b>## শিরোনাম</b> লিখলে উপশিরোনাম হবে, <b>- লেখা</b> লিখলে তালিকা হবে।</span><span class="err">ব্লগের লেখা লিখুন</span></div>
+      <label class="bpub"><input type="checkbox" id="bp" ${b.published === false ? '' : 'checked'}><span>সঙ্গে সঙ্গে প্রকাশ করুন</span></label>
+      <div class="mact"><button class="btn btn-line" data-close>বাতিল</button><button class="btn btn-green" id="bsave">${old ? 'আপডেট করুন' : 'সেভ করুন'}</button></div>`);
+    $('bc').value = b.cat; $('bc').dispatchEvent(new Event('change'));
+    $('bci').onchange = async e => { const f = e.target.files[0]; if (!f) return; cover = await KB.shrink(f, 1280); $('bcp').innerHTML = `<img src="${cover}" alt="">`; };
+    $('bsave').onclick = () => {
+      const v = { title: $('bt').value.trim(), cat: $('bc').value, excerpt: $('be').value.trim(), body: $('bb').value.trim() };
+      ['bft', 'bfc', 'bfe', 'bfb'].forEach(i => $(i).classList.remove('bad'));
+      let ok = true;
+      if (v.title.length < 5) { $('bft').classList.add('bad'); ok = false; }
+      if (!cover) { $('bfc').classList.add('bad'); ok = false; }
+      if (!v.excerpt) { $('bfe').classList.add('bad'); ok = false; }
+      if (v.body.length < 30) { $('bfb').classList.add('bad'); ok = false; }
+      if (!ok) return;
+      const list = KB.blogsRaw(), published = $('bp').checked;
+      if (old) { const i = list.findIndex(x => x.id === old.id); list[i] = { ...old, ...v, cover, published }; }
+      else list.push({ id: Date.now(), ...v, cover, authorId: u.id, published, createdAt: Date.now() });
+      KB.saveBlogs(list); closeModal(); toast(old ? 'ব্লগ আপডেট হয়েছে' : 'ব্লগ যোগ হয়েছে'); render();
+    };
+  }
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-b]'); if (!t) return;
+    const id = +t.dataset.id, a = t.dataset.b, list = KB.blogsRaw();
+    if (a === 'edit') return blogModal(id);
+    if (a === 'pub') { KB.saveBlogs(list.map(x => x.id === id ? { ...x, published: x.published === false } : x)); toast('ব্লগের অবস্থা বদলানো হয়েছে'); render(); }
+    else if (a === 'del' && confirm('ব্লগটি স্থায়ীভাবে মুছবেন?')) { KB.saveBlogs(list.filter(x => x.id !== id)); toast('ব্লগ মুছে ফেলা হয়েছে'); render(); }
+  });
 
   // ---------- actions (event delegation) ----------
   document.addEventListener('click', e => {

@@ -126,6 +126,54 @@ const Social = (() => {
     const sn = sheet.querySelector('[data-sn]'); if (sn) sn.onclick = () => navigator.share({ title: p.title, text: txt, url }).then(() => bump(p.id)).catch(() => {});
   };
 
+
+  // ---------- ছবির গ্যালারি (বড় পর্দায় দেখা) ----------
+  const gal = { imgs: [], i: 0, title: '' };
+  let glb;
+  const galBuild = () => {
+    glb = document.createElement('div'); glb.className = 'glb'; glb.setAttribute('role', 'dialog'); glb.setAttribute('aria-modal', 'true'); glb.setAttribute('aria-label', 'ছবির গ্যালারি');
+    glb.innerHTML = `<div class="glb-top"><span class="glb-c"></span><span class="glb-t"></span><button class="glb-x" aria-label="বন্ধ করুন">${ic('lucide:x')}</button></div>
+      <button class="glb-nav glb-p" aria-label="আগের ছবি">${ic('lucide:chevron-left')}</button>
+      <div class="glb-stage"><img alt=""></div>
+      <button class="glb-nav glb-n" aria-label="পরের ছবি">${ic('lucide:chevron-right')}</button>
+      <div class="glb-th"></div>`;
+    document.body.appendChild(glb);
+    glb.addEventListener('click', e => {
+      if (e.target.closest('.glb-x') || e.target.classList.contains('glb-stage') || e.target === glb) return galClose();
+      if (e.target.closest('.glb-p')) return galShow(gal.i - 1);
+      if (e.target.closest('.glb-n')) return galShow(gal.i + 1);
+      const t = e.target.closest('[data-ti]'); if (t) galShow(+t.dataset.ti);
+    });
+    let x0 = null;
+    glb.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+    glb.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) > 50) galShow(gal.i + (dx < 0 ? 1 : -1)); }, { passive: true });
+  };
+  const galShow = i => {
+    const n = gal.imgs.length; gal.i = (i + n) % n;
+    const img = glb.querySelector('.glb-stage img'); img.src = gal.imgs[gal.i]; img.alt = gal.title;
+    glb.querySelector('.glb-c').textContent = `${bn(gal.i + 1)} / ${bn(n)}`;
+    glb.querySelector('.glb-t').textContent = gal.title;
+    glb.querySelectorAll('.glb-th button').forEach((b, k) => b.classList.toggle('on', k === gal.i));
+    const on = glb.querySelector('.glb-th .on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    [gal.i + 1, gal.i - 1].forEach(k => { const im = new Image(); im.src = gal.imgs[(k + n) % n]; });   // পাশের ছবি আগে থেকে লোড
+  };
+  const galClose = () => { glb.classList.remove('open'); document.body.style.overflow = ''; };
+  const openGal = (imgs, i, title) => {
+    if (!glb) galBuild();
+    gal.imgs = imgs; gal.title = title || '';
+    const multi = imgs.length > 1;
+    glb.classList.toggle('single', !multi);
+    glb.querySelector('.glb-th').innerHTML = multi ? imgs.map((s, k) => `<button data-ti="${k}" aria-label="ছবি ${bn(k + 1)}"><img src="${s}" alt=""></button>`).join('') : '';
+    glb.classList.add('open'); document.body.style.overflow = 'hidden';
+    galShow(i);
+  };
+  document.addEventListener('keydown', e => {
+    if (!glb || !glb.classList.contains('open')) return;
+    if (e.key === 'Escape') galClose();
+    else if (e.key === 'ArrowLeft') galShow(gal.i - 1);
+    else if (e.key === 'ArrowRight') galShow(gal.i + 1);
+  });
+
   // ---------- events ----------
   let lpT, lpFired = false;
   document.addEventListener('touchstart', e => {
@@ -140,6 +188,12 @@ const Social = (() => {
   document.addEventListener('input', e => { if (e.target.matches('[data-cin]')) drafts[+e.target.closest('.soc').dataset.id] = e.target.value; });
 
   document.addEventListener('click', e => {
+    const gi = e.target.closest('.gi');
+    if (gi) {
+      const box = gi.closest('.clg'), p0 = posts().find(x => x.id === +box.dataset.pid);
+      if (p0) { const imgs = p0.images.length ? p0.images : [KB.ph(KB.catOf(p0.cat).icon, 0)]; openGal(imgs, +gi.dataset.gi, p0.title); }
+      return;
+    }
     const t = e.target.closest('[data-soc]');
     if (!e.target.closest('.soc-rw')) document.querySelectorAll('.soc-rw.pop').forEach(x => x.classList.remove('pop'));
     if (!e.target.closest('.pc-more')) document.querySelectorAll('.pc-more.open').forEach(x => x.classList.remove('open'));
@@ -185,5 +239,5 @@ const Social = (() => {
     }
   });
 
-  return { block, refresh, isSaved, R, rIcon };
+  return { block, refresh, isSaved, openGal, R, rIcon };
 })();
